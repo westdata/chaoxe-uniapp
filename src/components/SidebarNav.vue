@@ -7,7 +7,7 @@
     <view class="nav-divider"></view>
     <view class="nav-item active" @click="goToCustomerService">
       <image class="nav-icon-img" :src="chaoxiaoEIcon" mode="aspectFit" @error="onImageError"></image>
-      <text class="nav-text">朝小易</text>
+      <text class="nav-text">朝小e</text>
     </view>
   </view>
 </template>

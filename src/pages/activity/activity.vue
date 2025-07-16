@@ -73,140 +73,124 @@ export default {
   },
   data() {
     return {
-      loading: false,
-      volunteerActivities: [],
+      loading: true,
       volunteerItems: [],
       checkinSpots: []
     }
   },
   onLoad() {
-    this.loadVolunteerActivities()
-    this.loadCheckinSpots()
+    this.loadPageData()
   },
   onPullDownRefresh() {
-    this.refreshData()
+    this.loadPageData(true)
   },
   methods: {
-    async loadVolunteerActivities() {
+    async loadPageData(isRefresh = false) {
+      this.loading = true
       try {
-        console.log('开始加载志愿活动...')
-        this.loading = true
-        const response = await api.getVolunteerActivities({
-          page: 1,
-          page_size: 4,
-          is_active: true
-        })
+        const [volunteerRes, checkinRes] = await Promise.all([
+          api.getVolunteerActivities({ page: 1, page_size: 4, is_active: true }),
+          api.getPopularSpots(10)
+        ])
 
-        console.log('志愿活动API响应:', response)
-
-        if (response.success && response.data && response.data.items && response.data.items.length > 0) {
-          this.volunteerActivities = response.data.items
-          this.volunteerItems = response.data.items.map(item => ({
+        // 处理志愿活动数据
+        if (volunteerRes.success && volunteerRes.data && volunteerRes.data.items && volunteerRes.data.items.length > 0) {
+          this.volunteerItems = volunteerRes.data.items.map(item => ({
             id: item.id,
             title: item.title,
             subtitle: item.summary || '志愿活动',
-            image: item.thumbnail || item.cover_image, // 使用API返回的图片
+            image: item.thumbnail || item.cover_image,
             location: item.location,
             activity_time: item.activity_time,
             max_participants: item.max_participants,
-            current_participants: item.current_participants
+            current_participants: item.current_participants,
+            external_url: item.registration_url || '' // 修正API字段
           }))
-          console.log('志愿活动加载成功，共', this.volunteerItems.length, '条')
         } else {
-          // 显示默认数据，使用API图片地址
-          this.volunteerItems = [
-            {
-              id: 'default-1',
-              title: '522国际生物多样性日',
-              subtitle: '2023年主题宣传活动学习',
-              image: 'https://chyxe.cn/app/assets/images/image_c89129.png',
-              location: '朝阳公园南门',
-              activity_time: '2025-07-20T09:00:00Z',
-              max_participants: 50,
-              current_participants: 23
-            },
-            {
-              id: 'default-2',
-              title: '国际生物多样性日',
-              subtitle: '深入人心的环保共同体之路',
-              image: 'https://chyxe.cn/app/assets/images/image_9da5e4.jpg',
-              location: '朝阳区各社区',
-              activity_time: '2025-07-25T14:00:00Z',
-              max_participants: 30,
-              current_participants: 15
-            },
-            {
-              id: 'default-3',
-              title: '民法典知识竞赛第二期',
-              subtitle: '来测试专业法律知识',
-              image: 'https://chyxe.cn/app/assets/images/image_52bc7f.png',
-              location: '朝阳区河道',
-              activity_time: '2025-07-30T08:00:00Z',
-              max_participants: 40,
-              current_participants: 28
-            },
-            {
-              id: 'default-4',
-              title: '朝阳区2025年度中小学生态环保主题演讲比赛',
-              subtitle: '青春志愿 少年环保',
-              image: 'https://chyxe.cn/app/assets/images/image_6f5b85.jpg',
-              location: '地铁站点',
-              activity_time: '2025-08-05T07:30:00Z',
-              max_participants: 20,
-              current_participants: 12
-            }
-          ]
+          this.volunteerItems = this.getDefaultVolunteerItems()
         }
-      } catch (error) {
-        console.error('加载志愿活动失败:', error)
-        // 显示默认数据
-        this.volunteerItems = [
-          {
-            id: 'default-1',
-            title: '朝阳公园环保志愿活动',
-            subtitle: '清理公园垃圾，宣传环保知识',
-            image: '/static/volunteer-default.jpg'
-          },
-          {
-            id: 'default-2',
-            title: '社区环保宣传活动',
-            subtitle: '走进社区，传播环保理念',
-            image: '/static/volunteer-default.jpg'
-          }
-        ]
-      } finally {
-        this.loading = false
-      }
-    },
 
-    async loadCheckinSpots() {
-      try {
-        console.log('开始加载网红打卡地点...')
-        const response = await api.getPopularSpots(10)
-
-        if (response.success && response.data && response.data.length > 0) {
-          this.checkinSpots = response.data.map(spot => ({
+        // 处理网红打卡数据
+        if (checkinRes.success && checkinRes.data && checkinRes.data.length > 0) {
+          this.checkinSpots = checkinRes.data.map(spot => ({
             id: spot.id,
             title: spot.title,
             subtitle: spot.address || spot.summary || '热门打卡地点',
             address: spot.address,
             checkin_count: spot.checkin_count,
-            image: spot.thumbnail || spot.image_url || spot.cover_image
+            image: spot.thumbnail || spot.image_url || spot.cover_image,
+            external_url: spot.detail_url || '' // 修正API字段
           }))
-          console.log('网红打卡地点加载成功:', this.checkinSpots)
         } else {
-          console.log('API返回空数据，使用默认数据')
-          this.setDefaultCheckinSpots()
+          this.checkinSpots = this.getDefaultCheckinSpots()
         }
+
+        if (isRefresh) {
+          uni.showToast({ title: '刷新成功', icon: 'success' })
+        }
+
       } catch (error) {
-        console.error('加载网红打卡地点失败:', error)
-        console.log('使用默认数据')
-        this.setDefaultCheckinSpots()
+        console.error('加载页面数据失败:', error)
+        this.volunteerItems = this.getDefaultVolunteerItems()
+        this.checkinSpots = this.getDefaultCheckinSpots()
+        if (isRefresh) {
+          uni.showToast({ title: '刷新失败', icon: 'none' })
+        }
+      } finally {
+        this.loading = false
+        if (isRefresh) {
+          uni.stopPullDownRefresh()
+        }
       }
     },
 
-    setDefaultCheckinSpots() {
-      this.checkinSpots = [
+    getDefaultVolunteerItems() {
+      return [
+        {
+          id: 'default-1',
+          title: '522国际生物多样性日',
+          subtitle: '2023年主题宣传活动学习',
+          image: 'https://chyxe.cn/app/assets/images/image_c89129.png',
+          location: '朝阳公园南门',
+          activity_time: '2025-07-20T09:00:00Z',
+          max_participants: 50,
+          current_participants: 23
+        },
+        {
+          id: 'default-2',
+          title: '国际生物多样性日',
+          subtitle: '深入人心的环保共同体之路',
+          image: 'https://chyxe.cn/app/assets/images/image_9da5e4.jpg',
+          location: '朝阳区各社区',
+          activity_time: '2025-07-25T14:00:00Z',
+          max_participants: 30,
+          current_participants: 15
+        },
+        {
+          id: 'default-3',
+          title: '民法典知识竞赛第二期',
+          subtitle: '来测试专业法律知识',
+          image: 'https://chyxe.cn/app/assets/images/image_52bc7f.png',
+          location: '朝阳区河道',
+          activity_time: '2025-07-30T08:00:00Z',
+          max_participants: 40,
+          current_participants: 28
+        },
+        {
+          id: 'default-4',
+          title: '朝阳区2025年度中小学生态环保主题演讲比赛',
+          subtitle: '青春志愿 少年环保',
+          image: 'https://chyxe.cn/app/assets/images/image_6f5b85.jpg',
+          location: '地铁站点',
+          activity_time: '2025-08-05T07:30:00Z',
+          max_participants: 20,
+          current_participants: 12
+        }
+      ]
+    },
+
+    getDefaultCheckinSpots() {
+      return [
         {
           id: 'default-1',
           title: '顶个Citywalk黄金攻略',
@@ -221,8 +205,6 @@ export default {
         }
       ]
     },
-
-
 
     goBack() {
       const pages = getCurrentPages()
@@ -244,21 +226,57 @@ export default {
     },
 
     viewActivityDetail(item) {
-      // 显示活动详情模态框
-      uni.showModal({
-        title: item.title,
-        content: `${item.subtitle}\n\n地点：${item.location || '待定'}\n时间：${this.formatDate(item.activity_time) || '待定'}\n参与人数：${item.current_participants || 0}/${item.max_participants || 0}`,
-        showCancel: false
-      })
+      if (item.external_url && item.external_url.startsWith('http')) {
+        // #ifdef MP-WEIXIN
+        uni.navigateTo({
+          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}`
+        })
+        // #endif
+
+        // #ifdef APP-PLUS
+        uni.openURL({
+          url: item.external_url
+        })
+        // #endif
+
+        // #ifdef H5
+        window.open(item.external_url, '_blank')
+        // #endif
+      } else {
+        // 显示活动详情模态框
+        uni.showModal({
+          title: item.title,
+          content: `${item.subtitle}\n\n地点：${item.location || '待定'}\n时间：${this.formatDate(item.activity_time) || '待定'}\n参与人数：${item.current_participants || 0}/${item.max_participants || 0}`,
+          showCancel: false
+        })
+      }
     },
 
     viewCheckinDetail(item) {
-      // 显示打卡地点详情模态框
-      uni.showModal({
-        title: item.title,
-        content: `${item.subtitle}\n\n地址：${item.address || '待定'}\n打卡人数：${item.checkin_count || 0} 人`,
-        showCancel: false
-      })
+      if (item.external_url && item.external_url.startsWith('http')) {
+        // #ifdef MP-WEIXIN
+        uni.navigateTo({
+          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}`
+        })
+        // #endif
+
+        // #ifdef APP-PLUS
+        uni.openURL({
+          url: item.external_url
+        })
+        // #endif
+
+        // #ifdef H5
+        window.open(item.external_url, '_blank')
+        // #endif
+      } else {
+        // 显示打卡地点详情模态框
+        uni.showModal({
+          title: item.title,
+          content: `${item.subtitle}\n\n地址：${item.address || '待定'}\n打卡人数：${item.checkin_count || 0} 人`,
+          showCancel: false
+        })
+      }
     },
 
     formatDate(dateString) {
@@ -268,27 +286,7 @@ export default {
     },
 
     async refreshData() {
-      try {
-        await Promise.all([
-          this.loadVolunteerActivities(),
-          this.loadCheckinSpots()
-        ])
-
-        uni.showToast({
-          title: '刷新成功',
-          icon: 'success',
-          duration: 1500
-        })
-      } catch (error) {
-        console.error('刷新失败:', error)
-        uni.showToast({
-          title: '刷新失败',
-          icon: 'none',
-          duration: 1500
-        })
-      } finally {
-        uni.stopPullDownRefresh()
-      }
+      // 此方法已合并到 loadPageData
     },
 
     // 图片处理方法

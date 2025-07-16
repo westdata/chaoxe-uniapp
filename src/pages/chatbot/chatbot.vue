@@ -2,36 +2,36 @@
   <view class="webview-page">
     <!-- 页面标题 -->
     <view class="page-header">
-      <view class="header-left" @click="goHome">
+      <view class="header-left" @click="goBack">
         <text class="back-icon">‹</text>
       </view>
-      <view class="header-title">{{ pageTitle }}</view>
+      <view class="header-title">朝小e助手</view>
       <view class="header-right"></view>
     </view>
-
+    
     <!-- 加载状态 -->
     <view class="loading-container" v-if="loading">
       <view class="loading-content">
-        <view class="loading-icon">🌐</view>
-        <text class="loading-text">页面加载中...</text>
+        <view class="loading-icon">🤖</view>
+        <text class="loading-text">正在连接朝小e助手...</text>
       </view>
     </view>
-
+    
     <!-- WebView容器 -->
     <web-view 
-      v-if="webviewUrl && !error"
-      :src="webviewUrl"
+      v-if="chatbotUrl && !loading"
+      :src="chatbotUrl"
       @message="onMessage"
       @error="onError"
       @load="onLoad"
     ></web-view>
-
+    
     <!-- 错误状态 -->
     <view class="error-container" v-if="error">
       <view class="error-content">
         <view class="error-icon">❌</view>
         <text class="error-text">{{ error }}</text>
-        <!-- 移除了重试按钮，因为没有默认加载逻辑 -->
+        <button class="retry-btn" @click="loadChatbot">重试</button>
       </view>
     </view>
   </view>
@@ -43,47 +43,50 @@ import api from '@/utils/api.js'
 export default {
   data() {
     return {
-      webviewUrl: '',
+      chatbotUrl: '',
       loading: true,
-      error: '',
-      pageTitle: '详情'
+      error: ''
     }
   },
-  onLoad(options) {
-    const externalUrl = options.url ? decodeURIComponent(options.url) : null
-    this.pageTitle = options.title ? decodeURIComponent(options.title) : '详情'
-
-    if (externalUrl) {
-      this.webviewUrl = externalUrl
-      // loading 会在 onLoad 事件中设置为 false
-    } else {
-      this.error = '无效的页面地址，无法加载页面。'
-      this.loading = false
-    }
+  onLoad() {
+    this.loadChatbot()
   },
   methods: {
-    goHome() {
-      // 优先返回上一页
+    goBack() {
       const pages = getCurrentPages()
       if (pages.length > 1) {
         uni.navigateBack()
       } else {
-        uni.reLaunch({
-          url: '/pages/index/index'
-        })
+        uni.reLaunch({ url: '/pages/index/index' })
+      }
+    },
+    async loadChatbot() {
+      try {
+        this.loading = true
+        this.error = ''
+        const response = await api.getChatbotUrl()
+        if (response.success) {
+          this.chatbotUrl = response.data.chatbot_url
+        } else {
+          throw new Error(response.message || '获取AI助手链接失败')
+        }
+      } catch (error) {
+        console.error('加载AI助手失败:', error)
+        this.error = error.message || '连接失败，请检查网络后重试'
+      } finally {
+        this.loading = false
       }
     },
     onMessage(event) {
       console.log('WebView消息:', event.detail.data)
-      // 处理来自WebView的消息
     },
     onError(event) {
-      console.error('WebView错误:', event.detail)
-      this.error = '无法加载此页面，请检查链接是否正确或稍后重试。'
+      console.error('WebView错误:', event)
+      this.error = '页面加载失败，请重试'
       this.loading = false
     },
     onLoad(event) {
-      console.log('WebView加载完成:', event.detail)
+      console.log('WebView加载完成:', event)
       this.loading = false
     }
   }
@@ -173,7 +176,17 @@ export default {
   margin-bottom: 40rpx;
   line-height: 1.6;
 }
-/* 移除了 .retry-btn 样式 */
+
+.retry-btn {
+  background: linear-gradient(135deg, #FE2741 0%, #FF4757 100%);
+  color: #FFFFFF;
+  border-radius: 50rpx;
+  border: none;
+  font-size: 32rpx;
+  font-weight: 500;
+  padding: 24rpx 48rpx;
+}
+
 web-view {
   position: absolute;
   top: 88rpx;
@@ -183,4 +196,4 @@ web-view {
   width: 100%;
   height: calc(100vh - 88rpx);
 }
-</style>
+</style> 

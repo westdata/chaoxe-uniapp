@@ -18,7 +18,7 @@
       <view class="nav-divider"></view>
       <view class="nav-item active" @click="goToCustomerService">
         <image class="nav-icon-img" src="../../static/icons/white/朝小易红.png" mode="aspectFit" @error="onImageError"></image>
-        <text class="nav-text">朝小易</text>
+        <text class="nav-text">朝小e</text>
       </view>
     </view>
     
@@ -26,9 +26,12 @@
     <view class="form-container">
       <!-- 问题类型 -->
       <view class="form-item">
-        <view class="form-label">问题类型</view>
+        <view class="form-label required">问题类型</view>
         <view class="form-value" @click="showTypePicker">
-          <text class="value-text">{{ selectedType.name || '请选择' }}</text>
+          <text 
+            class="value-text"
+            :class="{ 'is-selected': selectedType.name }"
+          >{{ selectedType.name || '请选择' }}</text>
           <text class="arrow-icon">›</text>
         </view>
       </view>
@@ -36,8 +39,8 @@
       <!-- 姓名和联系方式 -->
       <view class="form-item combined-item">
         <view class="combined-fields">
-          <view class="field-group">
-            <view class="form-label">姓名</view>
+          <view class="field-group" v-if="!formData.is_anonymous">
+            <view class="form-label required">姓名</view>
             <view class="form-value-container">
               <input
                 class="form-input-right"
@@ -49,7 +52,7 @@
             </view>
           </view>
           <view class="field-group">
-            <view class="form-label">联系方式</view>
+            <view class="form-label required">联系方式</view>
             <view class="form-value-container">
               <input
                 class="form-input-right"
@@ -66,31 +69,38 @@
       
       <!-- 问题描述和文件上传 -->
       <view class="form-item textarea-item combined-textarea">
-        <textarea
-          class="form-textarea"
-          placeholder="请描述您遇到的问题，不少于15字"
-          v-model="formData.content"
-          maxlength="2000"
-          :show-count="true"
-        ></textarea>
-
-        <!-- 文件上传区域 -->
-        <view class="upload-area-inline">
-          <view class="upload-area" @click="chooseFile">
-            <view class="upload-icon">
-              <text class="plus-icon">+</text>
-            </view>
+        <view class="form-label required">问题描述</view>
+        <view class="textarea-wrapper">
+          <textarea
+            class="form-textarea"
+            :class="{ 'is-invalid': contentIsInvalid }"
+            placeholder="请描述您遇到的问题，不少于15字"
+            v-model="formData.content"
+            maxlength="2000"
+            :show-count="true"
+          ></textarea>
+          <view v-if="contentIsInvalid" class="error-tooltip">
+            问题描述不能少于15个字
           </view>
 
-          <!-- 已上传文件列表 -->
-          <view class="file-list" v-if="uploadedFiles.length > 0">
-            <view
-              class="file-item"
-              v-for="(file, index) in uploadedFiles"
-              :key="index"
-            >
-              <text class="file-name">{{ file.name }}</text>
-              <text class="file-remove" @click="removeFile(index)">×</text>
+          <!-- 文件上传区域 -->
+          <view class="upload-area-inline">
+            <view class="upload-area" @click="chooseFile">
+              <view class="upload-icon">
+                <text class="plus-icon">+</text>
+              </view>
+            </view>
+
+            <!-- 已上传文件列表 -->
+            <view class="file-list" v-if="uploadedFiles.length > 0">
+              <view
+                class="file-item"
+                v-for="(file, index) in uploadedFiles"
+                :key="index"
+              >
+                <text class="file-name">{{ file.name }}</text>
+                <text class="file-remove" @click="removeFile(index)">×</text>
+              </view>
             </view>
           </view>
         </view>
@@ -170,10 +180,15 @@ export default {
   },
   computed: {
     canSubmit() {
-      return this.formData.name.trim() && 
-             this.formData.phone.trim() && 
+      const nameIsValid = this.formData.is_anonymous || this.formData.name.trim()
+      return nameIsValid &&
+             this.formData.phone.trim() &&
              this.formData.content.trim().length >= 15 &&
-             this.selectedType.value
+             !!this.selectedType.value
+    },
+    contentIsInvalid() {
+      const contentLength = this.formData.content.trim().length
+      return contentLength > 0 && contentLength < 15
     }
   },
   methods: {
@@ -208,6 +223,9 @@ export default {
     },
     onAnonymousChange(e) {
       this.formData.is_anonymous = e.detail.value
+      if (this.formData.is_anonymous) {
+        this.formData.name = ''
+      }
     },
     chooseFile() {
       if (this.uploadedFiles.length >= 5) {
@@ -278,16 +296,22 @@ export default {
         const response = await api.submitMessage(this.formData)
 
         if (response.success) {
-          uni.showToast({
+          uni.showModal({
             title: '提交成功',
-            icon: 'success'
+            content: '感谢您的留言，我们将会尽快处理。',
+            showCancel: false,
+            confirmText: '好的',
+            success: (res) => {
+              if (res.confirm) {
+                this.resetForm()
+                // 可选：滚动到页面顶部
+                uni.pageScrollTo({
+                  scrollTop: 0,
+                  duration: 300
+                })
+              }
+            }
           })
-
-          // 重置表单
-          setTimeout(() => {
-            this.resetForm()
-            uni.navigateBack()
-          }, 1500)
         } else {
           throw new Error(response.message || '提交失败')
         }
@@ -320,7 +344,7 @@ export default {
     },
     goToCustomerService() {
       uni.navigateTo({
-        url: '/pages/webview/webview'
+        url: '/pages/chatbot/chatbot'
       })
     },
     onImageError(e) {
@@ -342,6 +366,13 @@ export default {
   background-position: center;
   background-repeat: no-repeat;
   padding-bottom: 200rpx;
+}
+
+.required::after {
+  content: ' *';
+  color: #FE2741;
+  font-weight: 700;
+  margin-left: 4rpx;
 }
 
 .page-header {
@@ -410,6 +441,10 @@ export default {
   color: #CCCCCC;
   text-align: right;
   flex: 1;
+}
+
+.value-text.is-selected {
+  color: #333333;
 }
 
 .arrow-icon {
@@ -487,6 +522,28 @@ export default {
   color: #333333;
   line-height: 1.6;
   margin-bottom: 20rpx;
+  padding: 16rpx;
+  background-color: #F8F8F8;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+.form-textarea.is-invalid {
+  border-color: #FE2741;
+}
+
+.textarea-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+.error-tooltip {
+  color: #FE2741;
+  font-size: 24rpx;
+  position: absolute;
+  bottom: 30rpx;
+  left: 20rpx;
 }
 
 .upload-area-inline {
@@ -652,9 +709,10 @@ export default {
   border: none;
 }
 
-.submit-btn:disabled {
-  background: #CCCCCC !important;
-  color: #FFFFFF !important;
+.submit-btn:disabled, .submit-btn[disabled] {
+  background: #E0E0E0 !important;
+  color: #A0A0A0 !important;
+  cursor: not-allowed;
 }
 
 .type-picker {

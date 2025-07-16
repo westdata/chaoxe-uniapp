@@ -71,6 +71,14 @@
 				"navigationStyle": "custom",
 				"backgroundColor": "#F4F4F4"
 			}
+		},
+
+		{
+			"path": "pages/chatbot/chatbot",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4"
+			}
 		}
 	],
 	"globalStyle": {

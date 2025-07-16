@@ -50,7 +50,7 @@
           </view>
           <text class="function-name">我要参加</text>
         </view>
-        <view class="function-item" @click="navigateTo('/pages/webview/webview')">
+        <view class="function-item" @click="navigateTo('/pages/chatbot/chatbot')">
           <view class="function-icon purple">
             <image class="icon-image" src="@/static/icons/朝小e助手.png" mode="aspectFit"></image>
           </view>
@@ -176,7 +176,8 @@ export default {
             description: item.summary || item.description || '暂无描述',
             published_at: item.publish_time || item.created_at,
             image_url: item.thumbnail, // API已经处理过图片URL
-            view_count: item.view_count || 0
+            view_count: item.view_count || 0,
+            external_url: item.external_url || ''
           }))
         } else {
           // 如果没有数据，显示默认内容
@@ -186,14 +187,16 @@ export default {
             description: '2024年朝阳区PM2.5年均浓度同比下降15%，环境质量显著提升',
             published_at: new Date().toISOString(),
             image_url: '/static/achievement-default.jpg',
-            view_count: 1250
+            view_count: 1250,
+            external_url: ''
           }, {
             id: 'default-2',
             title: '绿色发展成效显著',
             description: '新增绿化面积500万平方米，建成生态公园15个',
             published_at: new Date().toISOString(),
             image_url: '/static/achievement-default.jpg',
-            view_count: 890
+            view_count: 890,
+            external_url: ''
           }]
         }
       } catch (error) {
@@ -205,14 +208,16 @@ export default {
           description: '2024年朝阳区PM2.5年均浓度同比下降15%，环境质量显著提升',
           published_at: new Date().toISOString(),
           image_url: '/static/achievement-default.jpg',
-          view_count: 1250
+          view_count: 1250,
+          external_url: ''
         }, {
           id: 'default-2',
           title: '绿色发展成效显著',
           description: '新增绿化面积500万平方米，建成生态公园15个',
           published_at: new Date().toISOString(),
           image_url: '/static/achievement-default.jpg',
-          view_count: 890
+          view_count: 890,
+          external_url: ''
         }]
         uni.showToast({
           title: '环保成果加载失败',
@@ -228,8 +233,46 @@ export default {
     },
     onBannerClick(banner) {
       if (banner.link_url) {
-        // 如果有链接，可以跳转到对应页面
-        console.log('点击轮播图:', banner)
+        if (banner.link_url.startsWith('http')) {
+          // #ifdef H5
+          // H5端浏览器中打开
+          window.open(banner.link_url, '_blank')
+          // #endif
+
+          // #ifdef APP-PLUS
+          // App端调用系统浏览器打开
+          uni.openURL({
+            url: banner.link_url
+          })
+          // #endif
+
+          // #ifdef MP-WEIXIN
+          // 微信小程序端，提示并复制链接
+          uni.showModal({
+            title: '外部链接提示',
+            content: '即将打开的链接无法在小程序内直接访问，已为您复制链接，请在浏览器中打开。',
+            confirmText: '复制链接',
+            showCancel: false,
+            success: (res) => {
+              if (res.confirm) {
+                uni.setClipboardData({
+                  data: banner.link_url,
+                  success: () => {
+                    uni.showToast({
+                      title: '链接已复制'
+                    })
+                  }
+                })
+              }
+            }
+          })
+          // #endif
+        } else {
+          // 对于内部链接，正常跳转
+          uni.navigateTo({
+            url: banner.link_url
+          })
+        }
       }
     },
 
@@ -246,13 +289,33 @@ export default {
       return imageUtils.handleImageError(event, type)
     },
     viewAchievement(item) {
-      console.log('查看成果详情:', item)
-      // 显示成果详情模态框
-      uni.showModal({
-        title: item.title,
-        content: item.description,
-        showCancel: false
-      })
+      if (item.external_url && item.external_url.startsWith('http')) {
+        // #ifdef MP-WEIXIN
+        // 微信小程序端，在webview中打开
+        uni.navigateTo({
+          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}`
+        })
+        // #endif
+
+        // #ifdef APP-PLUS
+        // App端调用系统浏览器打开
+        uni.openURL({
+          url: item.external_url
+        })
+        // #endif
+
+        // #ifdef H5
+        // H5端浏览器中打开
+        window.open(item.external_url, '_blank')
+        // #endif
+      } else {
+        // 如果没有外部链接，可以保留旧的弹窗逻辑或者不做任何事
+        uni.showModal({
+          title: item.title,
+          content: item.description,
+          showCancel: false
+        })
+      }
     },
     formatDate(dateString) {
       const date = new Date(dateString)

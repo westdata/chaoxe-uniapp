@@ -6,6 +6,7 @@ export default defineConfig({
     uni(),
   ],
   server: {
+    port: 8080,
     proxy: {
       '/api': {
         target: 'https://chyxe.cn/chaoxe-api',
