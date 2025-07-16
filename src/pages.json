@@ -1,0 +1,83 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/service/service",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/message/message",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4"
+			}
+		},
+		{
+			"path": "pages/activity/activity",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4",
+				"enablePullDownRefresh": true,
+				"backgroundTextStyle": "dark"
+			}
+		},
+		{
+			"path": "pages/webview/webview",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4"
+			}
+		},
+		{
+			"path": "pages/test-api",
+			"style": {
+				"navigationBarTitleText": "API测试",
+				"backgroundColor": "#F5F5F5"
+			}
+		},
+		{
+			"path": "pages/environmental/environmental",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4"
+			}
+		},
+
+		{
+			"path": "pages/environmental/requirements",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4"
+			}
+		},
+
+
+		{
+			"path": "pages/environmental/daily",
+			"style": {
+				"navigationStyle": "custom",
+				"backgroundColor": "#F4F4F4"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationStyle": "custom",
+		"backgroundColor": "#F4F4F4",
+		"app-plus": {
+			"background": "#F4F4F4"
+		}
+	}
+}
