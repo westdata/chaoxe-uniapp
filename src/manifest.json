@@ -1,11 +1,10 @@
 {
-    "name" : "",
-    "appid" : "",
+    "name" : "朝小e",
+    "appid" : "__UNI__E15E045",
     "description" : "",
-    "versionName" : "1.0.0",
+    "versionName" : "1.2.0",
     "versionCode" : "100",
     "transformPx" : false,
-  
     "app-plus" : {
         "usingComponents" : true,
         "nvueStyleCompiler" : "uni-app",
@@ -16,11 +15,8 @@
             "autoclose" : true,
             "delay" : 0
         },
-       
         "modules" : {},
-        
         "distribute" : {
-           
             "android" : {
                 "permissions" : [
                     "<uses-permission android:name=\"android.permission.CHANGE_NETWORK_STATE\"/>",
@@ -40,15 +36,11 @@
                     "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
                 ]
             },
-            
             "ios" : {},
-           
             "sdkConfigs" : {}
         }
     },
-    
     "quickapp" : {},
-   
     "mp-weixin" : {
         "appid" : "",
         "setting" : {
@@ -63,7 +55,7 @@
                 "desc" : "您的位置信息将用于小程序位置接口的效果展示"
             }
         },
-        "requiredBackgroundModes" : ["location"],
+        "requiredBackgroundModes" : [ "location" ],
         "networkTimeout" : {
             "request" : 60000,
             "downloadFile" : 60000
@@ -78,8 +70,11 @@
     "mp-toutiao" : {
         "usingComponents" : true
     },
-    "uniStatistics": {  
-        "enable": false
+    "uniStatistics" : {
+        "enable" : false
     },
-    "vueVersion" : "3"
+    "vueVersion" : "3",
+    "h5" : {
+        "title" : "朝小e"
+    }
 }

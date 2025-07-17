@@ -17,7 +17,21 @@
       </view>
     </view>
     
-    <!-- WebView容器 -->
+    <!-- H5平台: 使用iframe并赋予权限 -->
+    <!-- #ifdef H5 -->
+    <iframe
+      v-if="chatbotUrl && !loading"
+      :src="chatbotUrl"
+      @error="onError"
+      @load="onLoad"
+      frameborder="0"
+      allow="microphone; autoplay"
+      class="webview-iframe"
+    ></iframe>
+    <!-- #endif -->
+    
+    <!-- 非H5平台(如小程序): 仍然使用web-view -->
+    <!-- #ifndef H5 -->
     <web-view 
       v-if="chatbotUrl && !loading"
       :src="chatbotUrl"
@@ -25,6 +39,7 @@
       @error="onError"
       @load="onLoad"
     ></web-view>
+    <!-- #endif -->
     
     <!-- 错误状态 -->
     <view class="error-container" v-if="error">
@@ -187,6 +202,7 @@ export default {
   padding: 24rpx 48rpx;
 }
 
+/* #ifndef H5 */
 web-view {
   position: absolute;
   top: 88rpx;
@@ -196,4 +212,18 @@ web-view {
   width: 100%;
   height: calc(100vh - 88rpx);
 }
+/* #endif */
+
+/* #ifdef H5 */
+.webview-iframe {
+  position: absolute;
+  top: 88rpx;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(100vh - 88rpx);
+  border: none;
+}
+/* #endif */
 </style> 
