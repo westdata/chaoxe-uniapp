@@ -124,7 +124,7 @@ export default {
       loading: false,
       hasMore: true,
       page: 1,
-      selectedCategoryId: null,
+      selectedCategoryId: 1, // 默认选中餐饮 (ID为1)
       categories: [],
       serviceList: []
     }
@@ -217,7 +217,9 @@ export default {
             required_materials: item.required_materials,
             contact_info: item.contact_info,
             view_count: item.view_count || 0,
-            image: item.thumbnail || this.getServiceImage(item.title)
+            image: item.thumbnail || this.getServiceImage(item.title),
+            external_url: item.external_url,
+            has_sub_items: item.has_sub_items
           }))
 
           if (this.page === 1) {
@@ -348,7 +350,9 @@ export default {
             title: item.title,
             description: item.summary || item.description || '暂无描述',
             category: item.category,
-            image: item.thumbnail || this.getServiceImage(item.title)
+            image: item.thumbnail || this.getServiceImage(item.title),
+            external_url: item.external_url,
+            has_sub_items: item.has_sub_items
           }))
           this.hasMore = false
         } else {
@@ -376,24 +380,33 @@ export default {
     viewServiceDetail(item) {
       console.log('查看服务详情:', item)
 
-      // 特殊处理：环境管理要求跳转到专门页面
-      if (item.title === '环境管理要求') {
-        navigation.navigateTo('/pages/environmental/daily')
+      // 1. 如果有外部链接，优先跳转到WebView
+      if (item.external_url) {
+        // 修改：使用特殊的自适应页面，通过参数传递原始URL
+        const adaptiveWebViewUrl = `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}`
+        navigation.navigateTo(adaptiveWebViewUrl)
         return
       }
 
-      // 跳转到服务详情页面
+      // 2. 如果有子项目 (如"环境管理要求")，跳转到专门的内部页面
+      if (item.has_sub_items) {
+        // 修改：跳转到日常环境管理页面，并传递service_id参数
+        navigation.navigateTo(`/pages/environmental/daily?service_id=${item.id}&title=${encodeURIComponent(item.title)}`)
+        return
+      }
+
+      // 3. 处理默认的占位数据
       if (item.id.toString().startsWith('default')) {
-        // 默认数据显示模态框
         uni.showModal({
           title: item.title,
           content: `${item.description}\n\n办理时间：${item.process_time}\n所需材料：${item.required_materials}\n联系方式：${item.contact_info}`,
           showCancel: false
         })
-      } else {
-        // 真实数据跳转到详情页面
-        navigation.navigateTo(`/pages/service/detail?id=${item.id}`)
+        return
       }
+
+      // 4. 对于没有外部链接也没有子项目的真实数据，跳转到内部详情页
+      navigation.navigateTo(`/pages/service/detail?id=${item.id}`)
     },
     onImageError(category) {
       // 图片加载失败时的处理

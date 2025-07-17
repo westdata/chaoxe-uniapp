@@ -8,7 +8,7 @@
       <view class="header-left" @click="goBack">
         <text class="back-icon">‹</text>
       </view>
-      <view class="header-title">日常环境管理</view>
+      <view class="header-title">{{ pageTitle }}</view>
       <view class="header-right"></view>
     </view>
 
@@ -63,78 +63,180 @@ export default {
   data() {
     return {
       searchKeyword: '',
-      envList: [],
-      defaultEnvList: [
-        {
-          id: 1,
-          title: '大气污染防护管理',
-          subtitle: '废气排放、设备设施管理要求',
-          thumbnail: 'https://chyxe.cn/app/assets/images/air_pollution.jpg'
-        },
-        {
-          id: 2,
-          title: '水污染防治管理',
-          subtitle: '污水排放、标准规范要求',
-          thumbnail: 'https://chyxe.cn/app/assets/images/water_pollution.jpg'
-        },
-        {
-          id: 3,
-          title: '固体废物管理',
-          subtitle: '固废分类收集、转移及处置',
-          thumbnail: 'https://chyxe.cn/app/assets/images/solid_waste.jpg'
-        },
-        {
-          id: 4,
-          title: '噪声污染防治管理',
-          subtitle: '工业噪声、建筑施工噪声',
-          thumbnail: 'https://chyxe.cn/app/assets/images/noise_control.jpg'
-        },
-        {
-          id: 5,
-          title: '环境风险管理要求',
-          subtitle: '应急预案、环境风险管控',
-          thumbnail: '/static/env/risk-management.jpg'
-        },
-        {
-          id: 6,
-          title: '重要参考文件',
-          subtitle: '法律法规、标准规范等内容',
-          thumbnail: '/static/env/documents.jpg'
-        }
-      ]
+      envList: [], // 环境管理要求列表
+      serviceId: null, // 父级服务ID
+      pageTitle: '环境管理要求', // 默认标题
+      parentService: null, // 父级服务信息
+      loading: false // 添加加载状态
     }
   },
-  onLoad() {
+  onLoad(options) {
+    // 获取URL参数中的service_id，如果存在则使用它
+    if (options.service_id) {
+      this.serviceId = parseInt(options.service_id)
+      console.log('接收到service_id:', this.serviceId)
+    }
+    
+    // 如果有标题参数，更新页面标题
+    if (options.title) {
+      this.pageTitle = decodeURIComponent(options.title)
+    }
+    
     this.loadEnvironmentalData()
   },
   methods: {
     async loadEnvironmentalData() {
       try {
-        // 从API加载数据
-        const response = await api.getEnvironmentalRequirements({
-          page: 1,
-          page_size: 20,
-          is_active: true
-        })
-
-        if (response.success && response.data && response.data.items && response.data.items.length > 0) {
-          // 使用API数据，图片URL已经在API层处理过了
-          this.envList = response.data.items.map(item => ({
-            id: item.id,
-            title: item.title,
-            subtitle: item.summary || item.description || '环境管理要求',
-            thumbnail: item.thumbnail
-          }))
-          console.log('环境管理要求数据加载成功:', this.envList.length, '条')
+        this.loading = true
+        this.envList = [] // 清空列表
+        let response
+        
+        console.log('=== 开始加载环境管理数据 ===')
+        console.log('serviceId:', this.serviceId)
+        
+        if (this.serviceId) {
+          // 如果有serviceId，使用getEnvironmentalRequirementsByService API
+          console.log('使用service_id获取环境管理要求列表:', this.serviceId)
+          response = await api.getEnvironmentalRequirementsByService(this.serviceId, {
+            page: 1,
+            page_size: 20,
+            is_active: true
+          })
+          
+          console.log('=== API响应详情 ===')
+          console.log('response.success:', response.success)
+          console.log('response.data:', response.data)
+          console.log('response.data类型:', typeof response.data)
+          
+          if (response.data) {
+            console.log('response.data的键:', Object.keys(response.data))
+            if (response.data.requirements) {
+              console.log('requirements存在')
+              console.log('requirements类型:', typeof response.data.requirements)
+              console.log('requirements的键:', Object.keys(response.data.requirements))
+              console.log('requirements.items:', response.data.requirements.items)
+              console.log('requirements.items长度:', response.data.requirements.items?.length)
+            } else {
+              console.log('requirements不存在')
+            }
+          }
+          
+          // 特别处理API返回的特殊数据结构
+          if (response.success && response.data && response.data.requirements) {
+            console.log('=== 进入特殊处理逻辑 ===')
+            // 修正：使用正确的字段名 requirements
+            const envItems = response.data.requirements.items || []
+            console.log('envItems长度:', envItems.length)
+            console.log('envItems内容:', envItems)
+            
+            if (envItems.length > 0) {
+              console.log('=== 开始处理envItems ===')
+              this.envList = envItems.map(item => ({
+                id: item.id,
+                title: item.title,
+                subtitle: item.summary || item.description || '环境管理要求',
+                thumbnail: item.thumbnail,
+                external_url: item.external_url
+              }))
+              
+              console.log('处理后的envList:', this.envList)
+              
+              // 设置父级服务信息
+              if (response.data.service) {
+                this.parentService = response.data.service
+                if (this.parentService.title) {
+                  this.pageTitle = this.parentService.title
+                }
+                console.log('设置父级服务信息:', this.parentService)
+              }
+              
+              console.log('=== 特殊处理完成，提前返回 ===')
+              return // 提前返回，跳过后面的通用处理
+            } else {
+              console.log('envItems为空，继续执行通用处理逻辑')
+            }
+          } else {
+            console.log('不满足特殊处理条件，继续执行通用处理逻辑')
+          }
         } else {
-          // 使用默认数据
-          this.envList = this.defaultEnvList
-          console.log('使用默认环境管理数据')
+          // 如果没有serviceId，使用默认API获取所有环境管理要求
+          console.log('使用默认API获取环境管理要求')
+          response = await api.getEnvironmentalRequirements({
+            page: 1,
+            page_size: 20,
+            is_active: true
+          })
+        }
+
+        // 通用数据处理逻辑（非特殊情况）
+        console.log('=== 进入通用处理逻辑 ===')
+        if (response.success && response.data) {
+          console.log('通用处理 - response.success:', response.success)
+          console.log('通用处理 - response.data:', response.data)
+          
+          // 检查是否有父级服务信息
+          if (response.data.service) {
+            this.parentService = response.data.service
+            if (!this.pageTitle && this.parentService.title) {
+              this.pageTitle = this.parentService.title
+            }
+          }
+          
+          // 获取环境管理要求列表
+          let items = []
+          
+          if (response.data.items) {
+            items = response.data.items
+            console.log('通用处理 - 从response.data.items获取:', items.length)
+          } else if (Array.isArray(response.data)) {
+            items = response.data
+            console.log('通用处理 - response.data是数组:', items.length)
+          }
+          
+          console.log('通用处理- 最终items:', items)
+          
+          if (items && items.length > 0) {
+            // 使用API数据
+            this.envList = items.map(item => ({
+              id: item.id,
+              title: item.title,
+              subtitle: item.summary || item.description || '环境管理要求',
+              thumbnail: item.thumbnail,
+              external_url: item.external_url
+            }))
+            console.log('环境管理要求数据加载成功:', this.envList.length, '条')
+          } else {
+            // 没有数据时显示空列表
+            this.envList = []
+            uni.showToast({
+              title: '暂无环境管理要求数据',
+              icon: 'none',
+              duration: 2000
+            })
+          }
+        } else {
+          // API请求失败
+          this.envList = []
+          console.log('=== API请求失败 ===')
+          console.log('response.message:', response.message)
+          uni.showToast({
+            title: response.message || '加载数据失败',
+            icon: 'none',
+            duration: 2000
+          })
         }
       } catch (error) {
-        console.error('加载环境管理数据失败:', error)
-        // 出错时使用默认数据
-        this.envList = this.defaultEnvList
+        console.error('=== 加载环境管理数据失败 ===')
+        console.error('错误详情:', error)
+        this.envList = []
+        uni.showToast({
+          title: '网络连接失败，请稍后重试',
+          icon: 'none',
+          duration: 2000
+        })
+      } finally {
+        this.loading = false
+        console.log('=== 加载完成，最终envList长度:', this.envList.length)
       }
     },
 
@@ -167,6 +269,14 @@ export default {
 
     viewDetail(item) {
       console.log('查看详情:', item)
+      
+      // 如果有外部链接，跳转到webview
+      if (item.external_url) {
+        navigation.navigateTo(`/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}`)
+        return
+      }
+      
+      // 默认行为：显示详情弹窗
       uni.showModal({
         title: item.title,
         content: item.subtitle,

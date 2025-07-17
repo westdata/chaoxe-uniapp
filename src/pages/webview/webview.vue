@@ -16,22 +16,24 @@
         <text class="loading-text">页面加载中...</text>
       </view>
     </view>
-
-    <!-- WebView容器 -->
-    <web-view 
-      v-if="webviewUrl && !error"
-      :src="webviewUrl"
-      @message="onMessage"
-      @error="onError"
-      @load="onLoad"
-    ></web-view>
+    
+    <!-- 固定定位的WebView容器，样式内联确保应用 -->
+    <view class="webview-wrapper" :style="{ top: '88rpx', height: 'calc(100vh - 88rpx)' }">
+      <web-view 
+        v-if="webviewUrl && !error"
+        :src="webviewUrl"
+        @message="onMessage"
+        @error="onError"
+        @load="onLoad"
+        style="width: 100%; height: 100%;"
+      ></web-view>
+    </view>
 
     <!-- 错误状态 -->
     <view class="error-container" v-if="error">
       <view class="error-content">
         <view class="error-icon">❌</view>
         <text class="error-text">{{ error }}</text>
-        <!-- 移除了重试按钮，因为没有默认加载逻辑 -->
       </view>
     </view>
   </view>
@@ -46,14 +48,23 @@ export default {
       webviewUrl: '',
       loading: true,
       error: '',
-      pageTitle: '详情'
+      pageTitle: '详情',
+      // 明确设置高度值，确保在所有环境中一致
+      headerHeight: '88rpx'
     }
   },
   onLoad(options) {
-    const externalUrl = options.url ? decodeURIComponent(options.url) : null
+    let externalUrl = options.url ? decodeURIComponent(options.url) : null
     this.pageTitle = options.title ? decodeURIComponent(options.title) : '详情'
 
     if (externalUrl) {
+      // 添加时间戳参数，防止缓存
+      if (externalUrl.includes('?')) {
+        externalUrl += `&t=${Date.now()}`
+      } else {
+        externalUrl += `?t=${Date.now()}`
+      }
+      
       this.webviewUrl = externalUrl
       // loading 会在 onLoad 事件中设置为 false
     } else {
@@ -93,12 +104,12 @@ export default {
 <style scoped>
 .webview-page {
   height: 100vh;
+  width: 100%;
   background-image: url('../../../photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
 
 .page-header {
@@ -109,13 +120,12 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 88rpx;
+  height: 88rpx; /* 导航栏高度 */
   background-color: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10rpx);
   padding: 0 30rpx;
   border-bottom: 1rpx solid #F0F0F0;
   z-index: 1000;
-  flex-shrink: 0;
 }
 
 .header-left {
@@ -142,9 +152,20 @@ export default {
   width: 80rpx;
 }
 
+/* WebView包装器样式 */
+.webview-wrapper {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  overflow: hidden;
+  z-index: 100;
+}
+
 .loading-container,
 .error-container {
-  position: absolute;
+  position: fixed;
   top: 88rpx;
   left: 0;
   right: 0;
@@ -153,6 +174,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 60rpx;
+  z-index: 101;
 }
 
 .loading-content,
@@ -172,15 +194,5 @@ export default {
   color: #666666;
   margin-bottom: 40rpx;
   line-height: 1.6;
-}
-/* 移除了 .retry-btn 样式 */
-web-view {
-  position: absolute;
-  top: 88rpx;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: calc(100vh - 88rpx);
 }
 </style>
