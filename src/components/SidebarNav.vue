@@ -32,7 +32,7 @@ export default {
     },
     goToCustomerService() {
       uni.navigateTo({
-        url: '/pages/webview/webview'
+        url: '/pages/chatbot/chatbot'
       })
     },
     onImageError(e) {

@@ -24,7 +24,7 @@ export default {
 }
 
 page {
-  background-image: url('./photo/服务事项/image.png');
+  background-image: url('photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -35,7 +35,7 @@ page {
 /* 通用容器 */
 .container {
   padding: 0 30rpx;
-  background-image: url('./photo/服务事项/image.png');
+  background-image: url('photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

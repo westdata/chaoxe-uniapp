@@ -444,7 +444,7 @@ export default {
 <style scoped>
 .service-page {
   min-height: 100vh;
-  background-image: url('../../../photo/服务事项/image.png');
+  background-image: url('photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -163,7 +163,7 @@ export default {
 .webview-page {
   height: 100vh;
   width: 100%;
-  background-image: url('../../../photo/服务事项/image.png');
+  background-image: url('photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -236,7 +236,7 @@ export default {
 <style scoped>
 .environmental-page {
   min-height: 100vh;
-  background-image: url('../../../photo/服务事项/image.png');
+  background-image: url('photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -248,7 +248,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   height: 88rpx;
-  background-image: url('../../../photo/服务事项/image.png');
+  background-image: url('photo/服务事项/image.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
