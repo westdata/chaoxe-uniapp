@@ -372,45 +372,63 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20rpx;
+  /* padding: 0 24rpx; */
 }
 
 .volunteer-item {
-  background: white;
-  border-radius: 12rpx;
+  background: #fff;
+  border-radius: 18rpx;
   overflow: hidden;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
 }
 
 .volunteer-image {
   width: 100%;
-  height: 120rpx;
+  height: 180rpx; /* 4:3 比例，假设卡片宽度约为240rpx，则高度180rpx */
+  object-fit: cover;
+  border-top-left-radius: 18rpx;
+  border-top-right-radius: 18rpx;
+  background: #f5f5f5;
 }
 
 .volunteer-content {
-  padding: 20rpx;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 12rpx 8rpx 0 8rpx;
 }
 
 .volunteer-item-title {
-  font-size: 26rpx;
-  font-weight: 600;
+  font-size: 22rpx;
+  font-weight: 500;
   color: #333;
-  display: block;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
   line-height: 1.3;
+  white-space: normal;
+  word-break: break-all;
 }
 
 .volunteer-item-subtitle {
-  font-size: 22rpx;
-  color: #666;
-  display: block;
-  line-height: 1.4;
-  margin-bottom: 8rpx;
+  font-size: 18rpx;
+  color: #777;
+  margin-bottom: 4rpx;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-all;
 }
 
 .volunteer-meta {
+  margin-top: 2rpx;
+  font-size: 16rpx;
+  color: #999;
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 2rpx;
 }
 
 .volunteer-location,
