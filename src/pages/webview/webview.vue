@@ -16,17 +16,36 @@
         <text class="loading-text">页面加载中...</text>
       </view>
     </view>
-    
+
     <!-- 固定定位的WebView容器，样式内联确保应用 -->
     <view class="webview-wrapper" :style="{ top: '88rpx', height: 'calc(100vh - 88rpx)' }">
-      <web-view 
-        v-if="webviewUrl && !error"
-        :src="webviewUrl"
-        @message="onMessage"
-        @error="onError"
-        @load="onLoad"
-        style="width: 100%; height: 100%;"
-      ></web-view>
+    <!-- H5平台: 使用iframe并赋予权限 -->
+    <!-- #ifdef H5 -->
+    <iframe
+      v-if="webviewUrl && !error"
+      :src="webviewUrl"
+      @error="onError"
+      @load="onLoad"
+      frameborder="0"
+      allow="microphone; camera; geolocation; autoplay; encrypted-media; fullscreen"
+      sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-pointer-lock"
+      class="webview-iframe"
+    ></iframe>
+    <!-- #endif -->
+
+    <!-- 非H5平台(如小程序): 使用web-view -->
+    <!-- #ifndef H5 -->
+    <web-view
+      v-if="webviewUrl && !error"
+      :src="webviewUrl"
+      @message="onMessage"
+      @error="onError"
+      @load="onLoad"
+      :webview-styles="webviewStyles"
+      :update-title="true"
+      style="width: 100%; height: 100%;"
+    ></web-view>
+    <!-- #endif -->
     </view>
 
     <!-- 错误状态 -->
@@ -50,7 +69,25 @@ export default {
       error: '',
       pageTitle: '详情',
       // 明确设置高度值，确保在所有环境中一致
-      headerHeight: '88rpx'
+      headerHeight: '88rpx',
+      // webview样式配置
+      webviewStyles: {
+        progress: {
+          color: '#FE2741'
+        },
+        // 启用滚动
+        scrollEnabled: true,
+        // 启用缩放
+        scalesPageToFit: true,
+        // 启用用户交互
+        userInteractionEnabled: true,
+        // 允许内联播放
+        allowsInlineMediaPlayback: true,
+        // 允许AirPlay
+        allowsAirPlayForMediaPlayback: true,
+        // 允许图片保存
+        allowsPictureInPictureMediaPlayback: true
+      }
     }
   },
   onLoad(options) {
@@ -87,6 +124,27 @@ export default {
     onMessage(event) {
       console.log('WebView消息:', event.detail.data)
       // 处理来自WebView的消息
+      const data = event.detail.data
+      if (data && data.length > 0) {
+        const message = data[0]
+        // 处理页面标题更新
+        if (message.type === 'title' && message.title) {
+          this.pageTitle = message.title
+        }
+        // 处理链接跳转请求
+        if (message.type === 'navigate' && message.url) {
+          this.handleNavigation(message.url)
+        }
+      }
+    },
+    // 处理导航请求
+    handleNavigation(url) {
+      // 如果是外部链接，在新的webview中打开
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        uni.navigateTo({
+          url: `/pages/webview/webview?url=${encodeURIComponent(url)}&title=${encodeURIComponent('外部链接')}`
+        })
+      }
     },
     onError(event) {
       console.error('WebView错误:', event.detail)
@@ -159,9 +217,33 @@ export default {
   right: 0;
   bottom: 0;
   width: 100%;
-  overflow: hidden;
+  /* 移除overflow: hidden，允许内容滚动 */
+  overflow: visible;
   z-index: 100;
 }
+
+/* H5平台iframe样式 */
+/* #ifdef H5 */
+.webview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  /* 确保iframe可以滚动 */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* #endif */
+
+/* 非H5平台web-view样式优化 */
+/* #ifndef H5 */
+web-view {
+  width: 100%;
+  height: 100%;
+  /* 确保webview可以滚动 */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* #endif */
 
 .loading-container,
 .error-container {
