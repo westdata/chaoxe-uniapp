@@ -55,7 +55,6 @@
 				"backgroundColor": "#F4F4F4"
 			}
 		},
-
 		{
 			"path": "pages/environmental/requirements",
 			"style": {
@@ -63,8 +62,6 @@
 				"backgroundColor": "#F4F4F4"
 			}
 		},
-
-
 		{
 			"path": "pages/environmental/daily",
 			"style": {
@@ -72,7 +69,6 @@
 				"backgroundColor": "#F4F4F4"
 			}
 		},
-
 		{
 			"path": "pages/chatbot/chatbot",
 			"style": {

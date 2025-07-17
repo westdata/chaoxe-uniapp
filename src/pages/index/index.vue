@@ -9,6 +9,7 @@
     <view class="banner-section">
       <swiper
         class="banner-swiper"
+        :style="{ height: swiperHeight + 'rpx' }"
         :indicator-dots="true"
         :autoplay="true"
         :interval="3000"
@@ -21,8 +22,9 @@
             <image
               class="banner-image"
               :src="getBannerImageUrl(banner.image_url)"
-              mode="aspectFill"
+              mode="aspectFit"
               @error="onImageError($event, 'banner')"
+              @load="onBannerImageLoad"
             ></image>
           </view>
         </swiper-item>
@@ -109,7 +111,9 @@ export default {
       bannerList: [],
       achievementList: [],
       loadingBanners: true,
-      loadingAchievements: true
+      loadingAchievements: true,
+      swiperHeight: 400, // 默认高度，防止闪烁
+      isSwiperHeightCalculated: false
     }
   },
   onLoad() {
@@ -120,6 +124,21 @@ export default {
     this.refreshData()
   },
   methods: {
+    onBannerImageLoad(e) {
+      if (this.isSwiperHeightCalculated) {
+        return
+      }
+      // 首次加载时，计算swiper高度
+      const { width, height } = e.detail
+      const screenWidth = uni.getSystemInfoSync().windowWidth
+      const marginInPx = 60 * (screenWidth / 750) // 左右边距共60rpx
+      const swiperWidth = screenWidth - marginInPx
+      const newHeightInPx = (swiperWidth * height) / width
+      const newHeightInRpx = newHeightInPx * (750 / screenWidth)
+
+      this.swiperHeight = newHeightInRpx
+      this.isSwiperHeightCalculated = true
+    },
     async loadBanners() {
       try {
         this.loadingBanners = true
@@ -383,7 +402,7 @@ export default {
 }
 
 .banner-swiper {
-  height: 400rpx;
+  /* height: 400rpx; */
 }
 
 .banner-item {
