@@ -78,6 +78,7 @@
 		}
 	],
 	"globalStyle": {
+		"navigationBarTitleText": "朝小e",
 		"navigationStyle": "custom",
 		"backgroundColor": "#F4F4F4",
 		"app-plus": {
