@@ -79,6 +79,43 @@ export default {
         // 添加触摸滚动支持
         document.body.style.webkitOverflowScrolling = 'touch';
         document.documentElement.style.webkitOverflowScrolling = 'touch';
+
+        // 添加自适应缩放功能
+        function applyAdaptiveScaling() {
+          // 禁止横向滚动
+          var styleElement = document.createElement('style');
+          styleElement.textContent = 'html, body { width: 100% !important; overflow-x: hidden !important; position: relative !important; }';
+          document.head.appendChild(styleElement);
+          
+          // 计算并应用缩放比例
+          var contentWidth = document.documentElement.scrollWidth;
+          var containerWidth = window.innerWidth;
+          
+          if (contentWidth > containerWidth) {
+            var scale = containerWidth / contentWidth;
+            var scaleStyle = document.createElement('style');
+            scaleStyle.textContent = 'body { transform: scale(' + scale + '); transform-origin: 0 0; -webkit-transform: scale(' + scale + '); -webkit-transform-origin: 0 0; width: ' + (100 / scale) + '% !important; }';
+            document.head.appendChild(scaleStyle);
+            
+            // 调整body高度，确保内容完全显示
+            setTimeout(function() {
+              var newHeight = document.body.scrollHeight * scale;
+              document.body.style.height = newHeight + 'px';
+            }, 300);
+          }
+        }
+        
+        // 在页面加载完成后应用缩放
+        if (document.readyState === 'complete') {
+          applyAdaptiveScaling();
+        } else {
+          window.addEventListener('load', applyAdaptiveScaling);
+        }
+        
+        // 在窗口大小变化时重新应用缩放
+        window.addEventListener('resize', function() {
+          setTimeout(applyAdaptiveScaling, 300);
+        });
         
         // 发送页面加载完成消息
         if (window.wx && window.wx.miniProgram) {
@@ -90,6 +127,52 @@ export default {
             }
           });
         }
+      })();
+    `;
+  },
+
+  /**
+   * 获取自适应缩放脚本
+   * 可以单独使用，用于注入到webview中
+   */
+  getAdaptiveScalingScript() {
+    return `
+      (function() {
+        // 禁止横向滚动
+        var styleElement = document.createElement('style');
+        styleElement.textContent = 'html, body { width: 100% !important; overflow-x: hidden !important; position: relative !important; }';
+        document.head.appendChild(styleElement);
+        
+        // 计算并应用缩放比例
+        function applyScale() {
+          var contentWidth = document.documentElement.scrollWidth;
+          var containerWidth = window.innerWidth;
+          
+          if (contentWidth > containerWidth) {
+            var scale = containerWidth / contentWidth;
+            var scaleStyle = document.createElement('style');
+            scaleStyle.textContent = 'body { transform: scale(' + scale + '); transform-origin: 0 0; -webkit-transform: scale(' + scale + '); -webkit-transform-origin: 0 0; width: ' + (100 / scale) + '% !important; }';
+            document.head.appendChild(scaleStyle);
+            
+            // 调整body高度，确保内容完全显示
+            setTimeout(function() {
+              var newHeight = document.body.scrollHeight * scale;
+              document.body.style.height = newHeight + 'px';
+            }, 300);
+          }
+        }
+        
+        // 在页面加载完成后应用缩放
+        if (document.readyState === 'complete') {
+          applyScale();
+        } else {
+          window.addEventListener('load', applyScale);
+        }
+        
+        // 在窗口大小变化时重新应用缩放
+        window.addEventListener('resize', function() {
+          setTimeout(applyScale, 300);
+        });
       })();
     `;
   },

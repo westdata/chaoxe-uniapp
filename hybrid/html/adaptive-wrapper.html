@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>网页加载中...</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease-out;
+        }
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-icon {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        .loading-text {
+            font-size: 16px;
+            color: #666;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="loading-icon"></div>
+        <div class="loading-text">页面加载中...</div>
+    </div>
+    
+    <iframe id="content-frame" style="opacity: 0;"></iframe>
+    
+    <script>
+        // 获取URL参数
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // 获取目标URL
+        const targetUrl = getQueryParam('url');
+        const iframe = document.getElementById('content-frame');
+        const loading = document.getElementById('loading');
+        
+        if (!targetUrl) {
+            loading.innerHTML = '<div class="loading-text">无效的页面地址</div>';
+        } else {
+            // 设置iframe源
+            iframe.src = decodeURIComponent(targetUrl);
+            
+            // 监听iframe加载完成
+            iframe.onload = function() {
+                try {
+                    // 注入自适应缩放脚本
+                    const iframeDoc = iframe.contentWindow.document;
+                    
+                    // 添加基本样式
+                    const styleEl = document.createElement('style');
+                    styleEl.textContent = `
+                        html, body {
+                            width: 100% !important;
+                            overflow-x: hidden !important;
+                            position: relative !important;
+                        }
+                        body {
+                            zoom: 1;
+                            transform-origin: 0 0;
+                            -webkit-transform-origin: 0 0;
+                            -moz-transform-origin: 0 0;
+                            -ms-transform-origin: 0 0;
+                        }
+                    `;
+                    iframeDoc.head.appendChild(styleEl);
+                    
+                    // 计算并应用缩放比例
+                    const contentWidth = iframeDoc.documentElement.scrollWidth;
+                    const containerWidth = iframe.clientWidth;
+                    
+                    if (contentWidth > containerWidth) {
+                        const scale = containerWidth / contentWidth;
+                        const scaleStyle = document.createElement('style');
+                        scaleStyle.textContent = `
+                            body {
+                                transform: scale(${scale}) !important;
+                                -webkit-transform: scale(${scale}) !important;
+                                -moz-transform: scale(${scale}) !important;
+                                -ms-transform: scale(${scale}) !important;
+                                width: ${100 / scale}% !important;
+                            }
+                        `;
+                        scaleStyle.setAttribute('data-scale', 'true');
+                        iframeDoc.head.appendChild(scaleStyle);
+                        
+                        // 调整body高度，确保内容完全显示
+                        setTimeout(function() {
+                            const newHeight = iframeDoc.body.scrollHeight * scale;
+                            iframeDoc.body.style.height = newHeight + 'px';
+                        }, 300);
+                    }
+                    
+                    // 拦截所有链接点击
+                    iframeDoc.addEventListener('click', function(e) {
+                        var target = e.target;
+                        
+                        // 查找最近的a标签
+                        while (target && target.tagName !== 'A') {
+                            target = target.parentElement;
+                        }
+                        
+                        if (target && target.href) {
+                            var href = target.href;
+                            
+                            // 如果是外部链接
+                            if (href.startsWith('http://') || href.startsWith('https://')) {
+                                // 阻止默认行为
+                                e.preventDefault();
+                                
+                                // 通知APP处理链接
+                                if (window.plus) {
+                                    // 使用5+ API打开新窗口
+                                    plus.webview.open(href, 'new_webview', {
+                                        titleNView: {
+                                            backgroundColor: '#f7f7f7',
+                                            titleText: '外部链接',
+                                            titleColor: '#000000',
+                                            buttons: [{
+                                                text: '关闭',
+                                                float: 'right',
+                                                fontSize: '16px'
+                                            }]
+                                        }
+                                    });
+                                } else {
+                                    // 如果没有plus对象，尝试使用普通方式打开
+                                    window.open(href, '_blank');
+                                }
+                            }
+                        }
+                    });
+                    
+                    // 隐藏加载界面，显示内容
+                    loading.classList.add('hidden');
+                    iframe.style.opacity = '1';
+                    
+                    // 更新页面标题
+                    document.title = iframeDoc.title || '网页内容';
+                    
+                    // 监听窗口大小变化，重新应用缩放
+                    window.addEventListener('resize', function() {
+                        setTimeout(function() {
+                            const contentWidth = iframeDoc.documentElement.scrollWidth;
+                            const containerWidth = iframe.clientWidth;
+                            
+                            if (contentWidth > containerWidth) {
+                                const scale = containerWidth / contentWidth;
+                                const scaleStyle = document.createElement('style');
+                                scaleStyle.textContent = `
+                                    body {
+                                        transform: scale(${scale}) !important;
+                                        -webkit-transform: scale(${scale}) !important;
+                                        -moz-transform: scale(${scale}) !important;
+                                        -ms-transform: scale(${scale}) !important;
+                                        width: ${100 / scale}% !important;
+                                    }
+                                `;
+                                
+                                // 移除之前的缩放样式
+                                const oldScaleStyle = iframeDoc.querySelector('style[data-scale]');
+                                if (oldScaleStyle) {
+                                    oldScaleStyle.remove();
+                                }
+                                
+                                scaleStyle.setAttribute('data-scale', 'true');
+                                iframeDoc.head.appendChild(scaleStyle);
+                                
+                                // 调整body高度
+                                const newHeight = iframeDoc.body.scrollHeight * scale;
+                                iframeDoc.body.style.height = newHeight + 'px';
+                            }
+                        }, 300);
+                    });
+                    
+                } catch (error) {
+                    console.error('注入自适应脚本失败:', error);
+                    // 出错时也要显示内容
+                    loading.classList.add('hidden');
+                    iframe.style.opacity = '1';
+                }
+            };
+            
+            // 处理加载错误
+            iframe.onerror = function() {
+                loading.innerHTML = '<div class="loading-text">页面加载失败</div>';
+            };
+            
+            // 超时处理
+            setTimeout(function() {
+                if (!loading.classList.contains('hidden')) {
+                    loading.classList.add('hidden');
+                    iframe.style.opacity = '1';
+                }
+            }, 15000); // 15秒后强制显示内容
+        }
+    </script>
+</body>
+</html> 

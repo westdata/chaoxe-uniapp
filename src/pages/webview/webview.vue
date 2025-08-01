@@ -30,6 +30,7 @@
       allow="microphone; camera; geolocation; autoplay; encrypted-media; fullscreen"
       sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation allow-pointer-lock"
       class="webview-iframe"
+      ref="webviewIframe"
     ></iframe>
     <!-- #endif -->
 
@@ -37,7 +38,7 @@
     <!-- #ifndef H5 -->
     <web-view
       v-if="webviewUrl && !error"
-      :src="webviewUrl"
+      :src="adaptiveWebviewUrl"
       @message="onMessage"
       @error="onError"
       @load="onLoad"
@@ -60,34 +61,20 @@
 
 <script>
 import api from '@/utils/api.js'
+import webviewBridge from '@/utils/webview-bridge.js'
 
 export default {
   data() {
     return {
       webviewUrl: '',
+      adaptiveWebviewUrl: '',
       loading: true,
       error: '',
       pageTitle: '详情',
       // 明确设置高度值，确保在所有环境中一致
       headerHeight: '88rpx',
       // webview样式配置
-      webviewStyles: {
-        progress: {
-          color: '#FE2741'
-        },
-        // 启用滚动
-        scrollEnabled: true,
-        // 启用缩放
-        scalesPageToFit: true,
-        // 启用用户交互
-        userInteractionEnabled: true,
-        // 允许内联播放
-        allowsInlineMediaPlayback: true,
-        // 允许AirPlay
-        allowsAirPlayForMediaPlayback: true,
-        // 允许图片保存
-        allowsPictureInPictureMediaPlayback: true
-      }
+      webviewStyles: webviewBridge.getWebviewStyles()
     }
   },
   onLoad(options) {
@@ -103,6 +90,16 @@ export default {
       }
       
       this.webviewUrl = externalUrl
+      
+      // 对于小程序环境，使用自适应URL
+      // #ifndef H5
+      this.adaptiveWebviewUrl = this.getAdaptiveUrl(externalUrl)
+      // #endif
+      
+      // #ifdef H5
+      this.adaptiveWebviewUrl = externalUrl
+      // #endif
+      
       // loading 会在 onLoad 事件中设置为 false
     } else {
       this.error = '无效的页面地址，无法加载页面。'
@@ -122,38 +119,80 @@ export default {
       }
     },
     onMessage(event) {
-      console.log('WebView消息:', event.detail.data)
-      // 处理来自WebView的消息
-      const data = event.detail.data
-      if (data && data.length > 0) {
-        const message = data[0]
-        // 处理页面标题更新
-        if (message.type === 'title' && message.title) {
-          this.pageTitle = message.title
-        }
-        // 处理链接跳转请求
-        if (message.type === 'navigate' && message.url) {
-          this.handleNavigation(message.url)
-        }
-      }
+      webviewBridge.handleMessage(event, this)
     },
     // 处理导航请求
     handleNavigation(url) {
-      // 如果是外部链接，在新的webview中打开
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        uni.navigateTo({
-          url: `/pages/webview/webview?url=${encodeURIComponent(url)}&title=${encodeURIComponent('外部链接')}`
-        })
-      }
+      webviewBridge.handleNavigation(url, this)
     },
     onError(event) {
-      console.error('WebView错误:', event.detail)
-      this.error = '无法加载此页面，请检查链接是否正确或稍后重试。'
-      this.loading = false
+      webviewBridge.handleError(event, this)
     },
     onLoad(event) {
       console.log('WebView加载完成:', event.detail)
       this.loading = false
+      
+      // 在H5环境下，为iframe注入自适应脚本
+      // #ifdef H5
+      this.$nextTick(() => {
+        this.injectScaleScript()
+      })
+      // #endif
+    },
+    
+    // 为H5环境的iframe注入自适应脚本
+    injectScaleScript() {
+      const iframe = this.$refs.webviewIframe
+      if (iframe && iframe.contentWindow) {
+        try {
+          // 等待iframe完全加载
+          setTimeout(() => {
+            // 注入自适应缩放脚本
+            const iframeDoc = iframe.contentWindow.document
+            const scriptEl = iframeDoc.createElement('script')
+            scriptEl.textContent = webviewBridge.getAdaptiveScalingScript()
+            iframeDoc.head.appendChild(scriptEl)
+          }, 500) // 给予足够的时间让iframe内容加载
+        } catch (error) {
+          console.error('注入缩放脚本失败:', error)
+        }
+      }
+    },
+    
+    // 获取添加了自适应脚本的URL
+    getAdaptiveUrl(url) {
+      // 如果URL已经包含自适应脚本，直接返回
+      if (url.includes('adaptive=true')) {
+        return url
+      }
+      
+      // 在小程序环境中，我们使用中间页面来实现自适应缩放
+      // #ifdef MP-WEIXIN
+      // 获取当前小程序页面路径，用于构建中间页面的路径
+      const pages = getCurrentPages()
+      const currentPage = pages[pages.length - 1]
+      const basePath = currentPage.route.split('/').slice(0, -1).join('/')
+      
+      // 构建中间页面的完整路径
+      // 注意：小程序中的web-view只能加载https或wss协议的网页
+      // 如果是本地HTML文件，需要先部署到可访问的HTTPS服务器上
+      
+      // 方案1: 如果中间页面已经部署到服务器上
+      // return `https://your-domain.com/adaptive-wrapper.html?url=${encodeURIComponent(url)}`
+      
+      // 方案2: 如果目标网站支持接收参数并自行处理缩放
+      return `${url}${url.includes('?') ? '&' : '?'}adaptive=true&scale=auto`
+      // #endif
+      
+      // 在APP环境中，我们可以使用本地HTML文件作为中间页
+      // #ifdef APP-PLUS
+      // 获取应用资源目录
+      const adaptiveWrapperPath = '_www/hybrid/html/adaptive-wrapper.html'
+      return `file://${adaptiveWrapperPath}?url=${encodeURIComponent(url)}`
+      // #endif
+      
+      // 在其他环境中，直接返回原始URL
+      return url
     }
   }
 }
@@ -217,8 +256,9 @@ export default {
   right: 0;
   bottom: 0;
   width: 100%;
-  /* 移除overflow: hidden，允许内容滚动 */
-  overflow: visible;
+  /* 允许竖向滚动，但禁止横向滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
   z-index: 100;
 }
 
@@ -228,8 +268,9 @@ export default {
   width: 100%;
   height: 100%;
   border: none;
-  /* 确保iframe可以滚动 */
-  overflow: auto;
+  /* 允许竖向滚动，但禁止横向滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 /* #endif */
@@ -240,7 +281,8 @@ web-view {
   width: 100%;
   height: 100%;
   /* 确保webview可以滚动 */
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 /* #endif */
