@@ -153,7 +153,7 @@ export default {
         { id: 2, name: '动物医院', icon: '🏥', image: dongwu, whiteImage: dongwuBai, imageLoaded: true },
         { id: 3, name: '热力生产', icon: '🔥', image: reli, whiteImage: reliBai, imageLoaded: true },
         { id: 4, name: '卫生业', icon: '🍃', image: weisheng, whiteImage: weishengBai, imageLoaded: true },
-        { id: 5, name: '汽修', icon: '�', imagge: qixiu, whiteImage: qixiuBai, imageLoaded: true },
+        { id: 5, name: '汽修', icon: '🚗', image: qixiu, whiteImage: qixiuBai, imageLoaded: true },
         { id: 6, name: '其他', icon: '📋', image: qita, whiteImage: qitaBai, imageLoaded: true }
       ]
     },
