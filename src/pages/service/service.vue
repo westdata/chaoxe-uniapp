@@ -99,8 +99,6 @@ import canyin from '@/static/icons/餐饮.png'
 import dongwu from '@/static/icons/动物医院.png'
 import reli from '@/static/icons/热力生产.png'
 import weisheng from '@/static/icons/卫生业.png'
-import shiyanshi from '@/static/icons/实验室.png'
-import jiayouzhan from '@/static/icons/加油站.png'
 import qixiu from '@/static/icons/汽修.png'
 import qita from '@/static/icons/其他.png'
 
@@ -109,8 +107,6 @@ import canyinBai from '@/static/icons/white/餐饮白.png'
 import dongwuBai from '@/static/icons/white/动物医院白.png'
 import reliBai from '@/static/icons/white/热力生产白.png'
 import weishengBai from '@/static/icons/white/卫生业白.png'
-import shiyanshiBai from '@/static/icons/white/实验室白.png'
-import jiayouzhanBai from '@/static/icons/white/加油站白.png'
 import qixiuBai from '@/static/icons/white/汽修白.png'
 import qitaBai from '@/static/icons/white/其他白.png'
 
@@ -157,10 +153,8 @@ export default {
         { id: 2, name: '动物医院', icon: '🏥', image: dongwu, whiteImage: dongwuBai, imageLoaded: true },
         { id: 3, name: '热力生产', icon: '🔥', image: reli, whiteImage: reliBai, imageLoaded: true },
         { id: 4, name: '卫生业', icon: '🍃', image: weisheng, whiteImage: weishengBai, imageLoaded: true },
-        { id: 5, name: '实验室', icon: '🔬', image: shiyanshi, whiteImage: shiyanshiBai, imageLoaded: true },
-        { id: 6, name: '加油站', icon: '⛽', image: jiayouzhan, whiteImage: jiayouzhanBai, imageLoaded: true },
-        { id: 7, name: '汽修', icon: '🚗', image: qixiu, whiteImage: qixiuBai, imageLoaded: true },
-        { id: 8, name: '其他', icon: '📋', image: qita, whiteImage: qitaBai, imageLoaded: true }
+        { id: 5, name: '汽修', icon: '�', imagge: qixiu, whiteImage: qixiuBai, imageLoaded: true },
+        { id: 6, name: '其他', icon: '📋', image: qita, whiteImage: qitaBai, imageLoaded: true }
       ]
     },
     goBack() {
@@ -517,8 +511,8 @@ export default {
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20rpx;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30rpx;
   justify-items: center;
   width: 100%;
   margin: 0;
@@ -535,8 +529,8 @@ export default {
 }
 
 .category-icon-container {
-  width: 150rpx;
-  height: 150rpx;
+  width: 180rpx;
+  height: 180rpx;
   background-color: #FFFFFF;
   border-radius: 16rpx;
   display: flex;
@@ -546,7 +540,7 @@ export default {
   margin-bottom: 12rpx;
   transition: background-color 0.3s ease;
   border: 1rpx solid #E5E5E5;
-  padding: 10rpx;
+  padding: 15rpx;
 }
 
 .category-icon-container.selected {
@@ -554,17 +548,18 @@ export default {
 }
 
 .icon-image {
-  width: 60rpx;
-  height: 60rpx;
-  margin-bottom: 8rpx;
+  width: 70rpx;
+  height: 70rpx;
+  margin-bottom: 10rpx;
 }
 
 .category-name {
-  font-size: 22rpx;
+  font-size: 26rpx;
   color: #333333;
   text-align: center;
   line-height: 1.2;
   transition: color 0.3s ease;
+  font-weight: 500;
 }
 
 .category-name.selected {
