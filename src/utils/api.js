@@ -35,16 +35,33 @@ class ApiService {
     return `${this.imageBaseUrl}/${imageUrl}`
   }
 
-  // 处理API响应数据中的图片字段
-  processApiResponse(data, imageFields = []) {
+  // 标准化日期格式
+  normalizeDateString(dateString) {
+    if (!dateString) return dateString
+    
+    // 处理格式如 '2025-7-6 2:35' 的日期字符串
+    // 转换为标准格式 '2025-07-06 02:35:00'
+    const dateRegex = /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/
+    const match = dateString.match(dateRegex)
+    
+    if (match) {
+      const [, year, month, day, hour, minute, second = '00'] = match
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${second.padStart(2, '0')}`
+    }
+    
+    return dateString
+  }
+
+  // 处理API响应数据中的图片字段和日期字段
+  processApiResponse(data, imageFields = [], dateFields = ['created_at', 'updated_at', 'published_at', 'activity_time']) {
     if (!data) return data
 
     // 如果是数组，递归处理每个元素
     if (Array.isArray(data)) {
-      return data.map(item => this.processApiResponse(item, imageFields))
+      return data.map(item => this.processApiResponse(item, imageFields, dateFields))
     }
 
-    // 如果是对象，处理图片字段
+    // 如果是对象，处理图片字段和日期字段
     if (typeof data === 'object') {
       const processedData = { ...data }
 
@@ -60,6 +77,13 @@ class ApiService {
       commonImageFields.forEach(field => {
         if (processedData[field] && !imageFields.includes(field)) {
           processedData[field] = this.processImageUrl(processedData[field])
+        }
+      })
+
+      // 处理日期字段
+      dateFields.forEach(field => {
+        if (processedData[field]) {
+          processedData[field] = this.normalizeDateString(processedData[field])
         }
       })
 
@@ -225,7 +249,7 @@ class ApiService {
   async getLatestAchievements(limit = 5) {
     const response = await this.get('/api/v1/achievements/published/latest', { limit })
     if (response.success && response.data) {
-      response.data = this.processApiResponse(response.data, ['thumbnail'])
+      response.data = this.processApiResponse(response.data, ['thumbnail'], ['created_at', 'updated_at', 'published_at'])
     }
     return response
   }
@@ -247,9 +271,9 @@ class ApiService {
     const response = await this.get('/api/v1/services/', params)
     if (response.success && response.data) {
       if (response.data.items) {
-        response.data.items = this.processApiResponse(response.data.items, ['thumbnail'])
+        response.data.items = this.processApiResponse(response.data.items, ['thumbnail'], ['created_at', 'updated_at', 'published_at'])
       } else {
-        response.data = this.processApiResponse(response.data, ['thumbnail'])
+        response.data = this.processApiResponse(response.data, ['thumbnail'], ['created_at', 'updated_at', 'published_at'])
       }
     }
     return response
@@ -258,7 +282,7 @@ class ApiService {
   async searchServices(keyword, category = '', limit = 20) {
     const response = await this.get('/api/v1/services/search', { q: keyword, category, limit })
     if (response.success && response.data) {
-      response.data = this.processApiResponse(response.data, ['thumbnail'])
+      response.data = this.processApiResponse(response.data, ['thumbnail'], ['created_at', 'updated_at', 'published_at'])
     }
     return response
   }
@@ -358,9 +382,9 @@ class ApiService {
     const response = await this.get('/api/v1/volunteer-activities/', params)
     if (response.success && response.data) {
       if (response.data.items) {
-        response.data.items = this.processApiResponse(response.data.items, ['thumbnail', 'cover_image'])
+        response.data.items = this.processApiResponse(response.data.items, ['thumbnail', 'cover_image'], ['created_at', 'updated_at', 'activity_time', 'registration_deadline'])
       } else {
-        response.data = this.processApiResponse(response.data, ['thumbnail', 'cover_image'])
+        response.data = this.processApiResponse(response.data, ['thumbnail', 'cover_image'], ['created_at', 'updated_at', 'activity_time', 'registration_deadline'])
       }
     }
     return response
@@ -369,7 +393,7 @@ class ApiService {
   async getUpcomingActivities(limit = 5) {
     const response = await this.get('/api/v1/volunteer-activities/upcoming/list', { limit })
     if (response.success && response.data) {
-      response.data = this.processApiResponse(response.data, ['thumbnail', 'cover_image'])
+      response.data = this.processApiResponse(response.data, ['thumbnail', 'cover_image'], ['created_at', 'updated_at', 'activity_time', 'registration_deadline'])
     }
     return response
   }
@@ -377,7 +401,7 @@ class ApiService {
   async getActivityDetail(activityId) {
     const response = await this.get(`/api/v1/volunteer-activities/${activityId}`)
     if (response.success && response.data) {
-      response.data = this.processApiResponse(response.data, ['thumbnail', 'cover_image'])
+      response.data = this.processApiResponse(response.data, ['thumbnail', 'cover_image'], ['created_at', 'updated_at', 'activity_time', 'registration_deadline'])
     }
     return response
   }

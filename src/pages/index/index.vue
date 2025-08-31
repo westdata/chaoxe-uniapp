@@ -76,10 +76,6 @@
             <view class="achievement-description">{{ item.description }}</view>
             <view class="achievement-meta">
               <view class="achievement-date">{{ formatDate(item.published_at) }}</view>
-              <view class="achievement-views" v-if="item.view_count">
-                <text class="view-icon">👁</text>
-                <text class="view-count">{{ item.view_count }}</text>
-              </view>
             </view>
           </view>
           <view class="achievement-image">
@@ -528,7 +524,6 @@ export default {
 .achievement-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
 .achievement-date {
@@ -536,21 +531,7 @@ export default {
   color: #999999;
 }
 
-.achievement-views {
-  display: flex;
-  align-items: center;
-  font-size: 24rpx;
-  color: #999999;
-}
 
-.view-icon {
-  margin-right: 8rpx;
-  font-size: 20rpx;
-}
-
-.view-count {
-  font-size: 24rpx;
-}
 
 .achievement-image {
   width: 160rpx;

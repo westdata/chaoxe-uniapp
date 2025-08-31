@@ -169,12 +169,8 @@ export default {
     },
     selectCategory(category) {
       console.log('选择分类:', category)
-      // 如果点击的是已选中的分类，则取消选中
-      if (this.selectedCategoryId === category.id) {
-        this.selectedCategoryId = null
-      } else {
-        this.selectedCategoryId = category.id
-      }
+      // 始终保持有一个分类被选中，不允许取消选中
+      this.selectedCategoryId = category.id
       // 重新加载服务列表
       this.page = 1
       this.loadServiceList()
@@ -325,21 +321,30 @@ export default {
     },
     async searchServices() {
       if (!this.searchKeyword.trim()) {
+        // 搜索框清空时，重新加载当前选中分类的服务列表
         this.page = 1
-        this.selectedCategoryId = null // 清除分类筛选
         this.loadServiceList()
         return
       }
 
       try {
+        // 始终基于当前选中的分类进行搜索
         const selectedCategory = this.selectedCategoryId ?
           this.categories.find(cat => cat.id === this.selectedCategoryId)?.name || '' : ''
 
         const response = await api.searchServices(this.searchKeyword, selectedCategory, 20)
 
         if (response.success && response.data) {
-          // 处理搜索结果
-          this.serviceList = response.data.map(item => ({
+          // 处理搜索结果，只显示当前选中分类的结果
+          const filteredResults = response.data.filter(item => {
+            // 如果有选中分类，只显示该分类的结果
+            if (selectedCategory) {
+              return item.category === selectedCategory
+            }
+            return true
+          })
+
+          this.serviceList = filteredResults.map(item => ({
             id: item.id,
             title: item.title,
             description: item.summary || item.description || '暂无描述',
@@ -349,10 +354,18 @@ export default {
             has_sub_items: item.has_sub_items
           }))
           this.hasMore = false
+
+          if (this.serviceList.length === 0) {
+            uni.showToast({
+              title: `在${selectedCategory}分类中未找到相关服务`,
+              icon: 'none'
+            })
+          }
         } else {
           this.serviceList = []
+          const selectedCategory = this.categories.find(cat => cat.id === this.selectedCategoryId)?.name || '当前分类'
           uni.showToast({
-            title: '未找到相关服务',
+            title: `在${selectedCategory}中未找到相关服务`,
             icon: 'none'
           })
         }
@@ -410,7 +423,7 @@ export default {
     async refreshData() {
       try {
         this.page = 1
-        this.selectedCategoryId = null
+        // 保持当前选中的分类，不重置为null
         this.searchKeyword = ''
 
         await this.loadServiceList()
