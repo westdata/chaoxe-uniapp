@@ -8,6 +8,11 @@
       <view class="header-title">{{ pageTitle }}</view>
       <view class="header-right"></view>
     </view>
+    
+    <!-- 面包屑导航区域 -->
+    <view class="breadcrumb-area">
+      <Breadcrumb :items="breadcrumbItems" />
+    </view>
 
     <!-- 加载状态 -->
     <view class="loading-container" v-if="loading">
@@ -18,7 +23,7 @@
     </view>
 
     <!-- 固定定位的WebView容器，样式内联确保应用 -->
-    <view class="webview-wrapper" :style="{ top: '88rpx', height: 'calc(100vh - 88rpx)' }">
+    <view class="webview-wrapper" :style="{ top: '200rpx', height: 'calc(100vh - 200rpx)' }">
     <!-- H5平台: 使用iframe并赋予权限 -->
     <!-- #ifdef H5 -->
     <iframe
@@ -62,8 +67,12 @@
 <script>
 import api from '@/utils/api.js'
 import webviewBridge from '@/utils/webview-bridge.js'
+import Breadcrumb from '@/components/Breadcrumb.vue'
 
 export default {
+  components: {
+    Breadcrumb
+  },
   data() {
     return {
       webviewUrl: '',
@@ -71,6 +80,7 @@ export default {
       loading: true,
       error: '',
       pageTitle: '详情',
+      breadcrumbItems: [],
       // 明确设置高度值，确保在所有环境中一致
       headerHeight: '88rpx',
       // webview样式配置
@@ -78,8 +88,21 @@ export default {
     }
   },
   onLoad(options) {
+    console.log('WebView onLoad options:', options)
     let externalUrl = options.url ? decodeURIComponent(options.url) : null
     this.pageTitle = options.title ? decodeURIComponent(options.title) : '详情'
+    
+    console.log('WebView页面信息:', {
+      externalUrl,
+      pageTitle: this.pageTitle,
+      from: options.from,
+      fromTitle: options.fromTitle
+    })
+    
+    // 设置面包屑
+    console.log('准备设置面包屑...')
+    this.setupBreadcrumb(options)
+    console.log('面包屑设置完成，当前breadcrumbItems:', this.breadcrumbItems)
 
     if (externalUrl) {
       // 添加时间戳参数，防止缓存
@@ -104,6 +127,19 @@ export default {
     } else {
       this.error = '无效的页面地址，无法加载页面。'
       this.loading = false
+    }
+  },
+  watch: {
+    breadcrumbItems: {
+      handler(newVal, oldVal) {
+        console.log('WebView breadcrumbItems 变化:', {
+          oldVal,
+          newVal,
+          newValLength: newVal ? newVal.length : 'undefined'
+        })
+      },
+      immediate: true,
+      deep: true
     }
   },
   methods: {
@@ -142,21 +178,45 @@ export default {
     
     // 为H5环境的iframe注入自适应脚本
     injectScaleScript() {
-      const iframe = this.$refs.webviewIframe
-      if (iframe && iframe.contentWindow) {
-        try {
-          // 等待iframe完全加载
-          setTimeout(() => {
-            // 注入自适应缩放脚本
-            const iframeDoc = iframe.contentWindow.document
-            const scriptEl = iframeDoc.createElement('script')
-            scriptEl.textContent = webviewBridge.getAdaptiveScalingScript()
-            iframeDoc.head.appendChild(scriptEl)
-          }, 500) // 给予足够的时间让iframe内容加载
-        } catch (error) {
-          console.error('注入缩放脚本失败:', error)
-        }
+      // 跨域iframe无法注入脚本，这是浏览器的安全限制
+      // 对于外部网站，我们无法控制其内容，所以跳过脚本注入
+      console.log('跳过iframe脚本注入（跨域限制）')
+    },
+    
+    // 设置面包屑导航
+    setupBreadcrumb(options) {
+      // 获取来源页面信息
+      const fromPage = options.from || ''
+      const fromTitle = options.fromTitle ? decodeURIComponent(options.fromTitle) : ''
+      
+      // 默认面包屑
+      let breadcrumbs = [
+        { title: '首页', path: '/pages/index/index' }
+      ]
+      
+      // 根据来源页面添加中间层级
+      if (fromPage === 'service') {
+        breadcrumbs.push({ title: '我要办事', path: '/pages/service/service' })
+      } else if (fromPage === 'environmental') {
+        breadcrumbs.push({ title: '日常环境管理', path: '/pages/environmental/environmental' })
+      } else if (fromPage === 'activity') {
+        breadcrumbs.push({ title: '我要参加', path: '/pages/activity/activity' })
+      } else if (fromPage === 'daily') {
+        breadcrumbs.push({ title: '日常环境管理', path: '/pages/environmental/environmental' })
+        breadcrumbs.push({ title: '管理要求', path: '/pages/environmental/daily' })
       }
+      
+      // 添加当前页面（使用页面标题）
+      breadcrumbs.push({ title: this.pageTitle, path: '' })
+      
+      this.breadcrumbItems = breadcrumbs
+      
+      console.log('WebView面包屑设置:', {
+        fromPage,
+        fromTitle,
+        pageTitle: this.pageTitle,
+        breadcrumbs: this.breadcrumbItems
+      })
     },
     
     // 获取添加了自适应脚本的URL
@@ -249,6 +309,16 @@ export default {
   width: 80rpx;
 }
 
+.breadcrumb-area {
+  position: fixed;
+  top: 88rpx;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: transparent;
+  padding-top: 10rpx;
+}
+
 /* WebView包装器样式 */
 .webview-wrapper {
   position: fixed;
@@ -290,7 +360,7 @@ web-view {
 .loading-container,
 .error-container {
   position: fixed;
-  top: 88rpx;
+  top: 200rpx;
   left: 0;
   right: 0;
   bottom: 0;

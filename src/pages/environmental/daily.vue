@@ -12,6 +12,9 @@
       <view class="header-right"></view>
     </view>
 
+    <!-- 面包屑导航 -->
+    <Breadcrumb :items="breadcrumbItems" />
+
     <!-- 搜索框 -->
     <view class="search-container">
       <view class="search-box">
@@ -55,10 +58,12 @@ import api from '@/utils/api.js'
 import navigation from '@/utils/navigation.js'
 import imageUtils from '@/utils/imageUtils.js'
 import SidebarNav from '@/components/SidebarNav.vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
 
 export default {
   components: {
-    SidebarNav
+    SidebarNav,
+    Breadcrumb
   },
   data() {
     return {
@@ -67,7 +72,8 @@ export default {
       serviceId: null, // 父级服务ID
       pageTitle: '环境管理要求', // 默认标题
       parentService: null, // 父级服务信息
-      loading: false // 添加加载状态
+      loading: false, // 添加加载状态
+      breadcrumbItems: [] // 面包屑导航数据
     }
   },
   onLoad(options) {
@@ -81,6 +87,9 @@ export default {
     if (options.title) {
       this.pageTitle = decodeURIComponent(options.title)
     }
+    
+    // 设置面包屑导航
+    this.setupBreadcrumb()
     
     this.loadEnvironmentalData()
   },
@@ -272,7 +281,7 @@ export default {
       
       // 如果有外部链接，跳转到webview
       if (item.external_url) {
-        navigation.navigateTo(`/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}`)
+        navigation.navigateTo(`/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}&from=daily&fromTitle=${encodeURIComponent('管理要求')}`)
         return
       }
       
@@ -282,6 +291,15 @@ export default {
         content: item.subtitle,
         showCancel: false
       })
+    },
+
+    setupBreadcrumb() {
+      // 设置面包屑导航
+      this.breadcrumbItems = [
+        { title: '首页', path: '/pages/index/index' },
+        { title: '服务事项', path: '/pages/service/service' },
+        { title: this.pageTitle, path: '' } // 当前页面，无路径
+      ]
     },
 
     goBack() {

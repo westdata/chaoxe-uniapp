@@ -8,6 +8,9 @@
       <view class="header-title">我要留言</view>
       <view class="header-right"></view>
     </view>
+    
+    <!-- 面包屑导航 -->
+    <Breadcrumb :items="breadcrumbItems" />
 
     <!-- 侧边栏导航 -->
     <view class="sidebar-nav">
@@ -155,8 +158,14 @@
 
 <script>
 import api from '@/utils/api.js'
+import Breadcrumb from '@/components/Breadcrumb.vue'
+import breadcrumbMixin from '@/mixins/breadcrumbMixin.js'
 
 export default {
+  components: {
+    Breadcrumb
+  },
+  mixins: [breadcrumbMixin],
   data() {
     return {
       showPicker: false,

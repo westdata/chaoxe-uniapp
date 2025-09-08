@@ -11,6 +11,9 @@
       <view class="header-title">我要参加</view>
       <view class="header-right"></view>
     </view>
+    
+    <!-- 面包屑导航 -->
+    <Breadcrumb :items="breadcrumbItems" />
 
     <!-- 内容区域 -->
     <view class="content-container">
@@ -66,11 +69,15 @@ import api from '@/utils/api.js'
 import navigation from '@/utils/navigation.js'
 import imageUtils from '@/utils/imageUtils.js'
 import SidebarNav from '@/components/SidebarNav.vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
+import breadcrumbMixin from '@/mixins/breadcrumbMixin.js'
 
 export default {
   components: {
-    SidebarNav
+    SidebarNav,
+    Breadcrumb
   },
+  mixins: [breadcrumbMixin],
   data() {
     return {
       loading: true,
@@ -229,7 +236,7 @@ export default {
       if (item.external_url && item.external_url.startsWith('http')) {
         // #ifdef MP-WEIXIN
         uni.navigateTo({
-          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}`
+          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}&from=activity&fromTitle=${encodeURIComponent('我要参加')}`
         })
         // #endif
 
@@ -256,7 +263,7 @@ export default {
       if (item.external_url && item.external_url.startsWith('http')) {
         // #ifdef MP-WEIXIN
         uni.navigateTo({
-          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}`
+          url: `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}&from=activity&fromTitle=${encodeURIComponent('我要参加')}`
         })
         // #endif
 

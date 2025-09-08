@@ -12,6 +12,9 @@
       <view class="header-right"></view>
     </view>
     
+    <!-- 面包屑导航 -->
+    <Breadcrumb :items="breadcrumbItems" />
+    
     <!-- 搜索框 -->
     <view class="search-container">
       <view class="search-box">
@@ -93,6 +96,8 @@
 import api from '@/utils/api.js'
 import navigation from '@/utils/navigation.js'
 import SidebarNav from '@/components/SidebarNav.vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
+import breadcrumbMixin from '@/mixins/breadcrumbMixin.js'
 
 // 导入图标
 import canyin from '@/static/icons/餐饮.png'
@@ -112,8 +117,10 @@ import qitaBai from '@/static/icons/white/其他白.png'
 
 export default {
   components: {
-    SidebarNav
+    SidebarNav,
+    Breadcrumb
   },
+  mixins: [breadcrumbMixin],
   data() {
     return {
       searchKeyword: '',
@@ -386,11 +393,15 @@ export default {
     },
     viewServiceDetail(item) {
       console.log('查看服务详情:', item)
+      console.log('item.external_url:', item.external_url)
+      console.log('item.has_sub_items:', item.has_sub_items)
 
       // 1. 如果有外部链接，优先跳转到WebView
       if (item.external_url) {
-        // 修改：使用特殊的自适应页面，通过参数传递原始URL
-        const adaptiveWebViewUrl = `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}`
+        console.log('跳转到WebView:', item.external_url)
+        // 修改：使用特殊的自适应页面，通过参数传递原始URL和来源信息
+        const adaptiveWebViewUrl = `/pages/webview/webview?url=${encodeURIComponent(item.external_url)}&title=${encodeURIComponent(item.title)}&from=service&fromTitle=${encodeURIComponent('我要办事')}`
+        console.log('WebView URL:', adaptiveWebViewUrl)
         navigation.navigateTo(adaptiveWebViewUrl)
         return
       }
@@ -413,7 +424,7 @@ export default {
       }
 
       // 4. 对于没有外部链接也没有子项目的真实数据，跳转到内部详情页
-      navigation.navigateTo(`/pages/service/detail?id=${item.id}`)
+      navigation.navigateTo(`/pages/service/detail?id=${item.id}&title=${encodeURIComponent(item.title)}`)
     },
     onImageError(category) {
       // 图片加载失败时的处理

@@ -12,6 +12,9 @@
       <view class="header-right"></view>
     </view>
     
+    <!-- 面包屑导航 -->
+    <Breadcrumb :items="breadcrumbItems" />
+    
     <!-- 搜索框 -->
     <view class="search-container">
       <view class="search-box">
@@ -70,11 +73,15 @@ import api from '@/utils/api.js'
 import navigation from '@/utils/navigation.js'
 import imageUtils from '@/utils/imageUtils.js'
 import SidebarNav from '@/components/SidebarNav.vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
+import breadcrumbMixin from '@/mixins/breadcrumbMixin.js'
 
 export default {
   components: {
-    SidebarNav
+    SidebarNav,
+    Breadcrumb
   },
+  mixins: [breadcrumbMixin],
   data() {
     return {
       searchKeyword: '',
