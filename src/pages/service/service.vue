@@ -8,7 +8,7 @@
       <view class="header-left" @click="goBack">
         <text class="back-icon">‹</text>
       </view>
-      <view class="header-title">服务事项</view>
+      <view class="header-title">我要办事</view>
       <view class="header-right"></view>
     </view>
     
