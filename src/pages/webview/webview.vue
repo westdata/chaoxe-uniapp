@@ -1,5 +1,7 @@
 <template>
   <view class="webview-page">
+    <!-- 背景图片 -->
+    <image class="background-image" src="/photo/服务事项/image.png" mode="aspectFill"></image>
     <!-- 页面标题 -->
     <view class="page-header">
       <view class="header-left" @click="goHome">
@@ -162,7 +164,13 @@ export default {
       webviewBridge.handleNavigation(url, this)
     },
     onError(event) {
-      webviewBridge.handleError(event, this)
+      console.error('WebView加载错误:', event)
+      // 如果是域名不在白名单的错误，显示友好提示
+      if (event.detail && event.detail.errMsg && event.detail.errMsg.includes('not in domain list')) {
+        this.error = '该网页域名未在小程序业务域名白名单中，请联系管理员配置域名或在微信开发者工具中关闭域名校验。'
+      } else {
+        webviewBridge.handleError(event, this)
+      }
     },
     onLoad(event) {
       console.log('WebView加载完成:', event.detail)
@@ -262,11 +270,16 @@ export default {
 .webview-page {
   height: 100vh;
   width: 100%;
-  background-image: url('photo/服务事项/image.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   position: relative;
+}
+
+.background-image {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
 }
 
 .page-header {
