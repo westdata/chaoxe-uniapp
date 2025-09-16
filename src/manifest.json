@@ -1,5 +1,5 @@
 {
-    "name" : "朝小e",
+    "name" : "生态朝阳·AI小帮手",
     "appid" : "__UNI__E15E045",
     "description" : "",
     "versionName" : "1.2.0",
@@ -42,7 +42,7 @@
     },
     "quickapp" : {},
     "mp-weixin" : {
-        "appid" : "wx5cdfeafe60b28bfb",
+        "appid" : "wx4ec4db660f530f48",
         "setting" : {
             "urlCheck" : false,
             "es6" : false,

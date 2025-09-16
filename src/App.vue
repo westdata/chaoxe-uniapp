@@ -24,10 +24,7 @@ export default {
 }
 
 page {
-  background-image: url('photo/服务事项/image.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: linear-gradient(to bottom, #f8c8dc 0%, #fde8e8 40%, #f5f5dc 80%, #f0f0e8 100%);
   font-family: 'Alibaba PuHuiTi', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   line-height: 1.6;
 }
@@ -35,10 +32,7 @@ page {
 /* 通用容器 */
 .container {
   padding: 0 30rpx;
-  background-image: url('photo/服务事项/image.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: linear-gradient(to bottom, #f8c8dc 0%, #fde8e8 40%, #f5f5dc 80%, #f0f0e8 100%);
 }
 
 /* 通用卡片样式 */

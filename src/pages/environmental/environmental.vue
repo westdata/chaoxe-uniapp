@@ -243,10 +243,7 @@ export default {
 <style scoped>
 .environmental-page {
   min-height: 100vh;
-  background-image: url('photo/服务事项/image.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: linear-gradient(to bottom, #f8c8dc 0%, #fde8e8 40%, #f5f5dc 80%, #f0f0e8 100%);
   padding-bottom: 150rpx;
 }
 
@@ -255,10 +252,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   height: 88rpx;
-  background-image: url('photo/服务事项/image.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: transparent;
   padding: 0 30rpx;
   border-bottom: 1rpx solid #F0F0F0;
 }

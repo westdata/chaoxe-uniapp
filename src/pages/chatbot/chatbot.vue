@@ -111,10 +111,7 @@ export default {
 <style scoped>
 .webview-page {
   height: 100vh;
-  background-image: url('photo/服务事项/image.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: linear-gradient(to bottom, #f8c8dc 0%, #fde8e8 40%, #f5f5dc 80%, #f0f0e8 100%);
   display: flex;
   flex-direction: column;
 }

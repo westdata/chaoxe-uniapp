@@ -1,7 +1,5 @@
 <template>
   <view class="service-page">
-    <!-- 背景图片 -->
-    <image class="background-image" src="/photo/服务事项/image.png" mode="aspectFill"></image>
     <!-- 侧边栏导航 -->
     <SidebarNav />
 
@@ -465,15 +463,7 @@ export default {
 .service-page {
   min-height: 100vh;
   position: relative;
-}
-
-.background-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
+  background: linear-gradient(to bottom, #f8c8dc 0%, #fde8e8 40%, #f5f5dc 80%, #f0f0e8 100%);
 }
 
 .page-header {

@@ -1,7 +1,5 @@
 <template>
   <view class="webview-page">
-    <!-- 背景图片 -->
-    <image class="background-image" src="/photo/服务事项/image.png" mode="aspectFill"></image>
     <!-- 页面标题 -->
     <view class="page-header">
       <view class="header-left" @click="goHome">
@@ -271,15 +269,7 @@ export default {
   height: 100vh;
   width: 100%;
   position: relative;
-}
-
-.background-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
+  background: linear-gradient(to bottom, #f8c8dc 0%, #fde8e8 40%, #f5f5dc 80%, #f0f0e8 100%);
 }
 
 .page-header {
