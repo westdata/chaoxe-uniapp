@@ -16,10 +16,9 @@ export default {
 
 <style lang="scss">
 /* 全局样式 */
-@import './uni.scss';
 
 /* 重置样式 */
-* {
+view, text, image, button, input, textarea {
   box-sizing: border-box;
 }
 
@@ -130,7 +129,7 @@ page {
 
 /* 状态栏样式 */
 .status-bar {
-  height: var(--status-bar-height);
+  height: 44rpx;
   background-color: transparent;
 }
 
