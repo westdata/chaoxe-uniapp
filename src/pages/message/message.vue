@@ -181,7 +181,6 @@ export default {
       },
       messageTypes: [
         { value: '咨询类', name: '咨询类' },
-        { value: '投诉举报类', name: '投诉举报类' },
         { value: '建议意见类', name: '建议意见类' },
         { value: '其他类', name: '其他类' }
       ]
